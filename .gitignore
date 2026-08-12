@@ -1,2 +1,6 @@
 .env
 .venv/
+.claude
+.cursor
+.vscode
+CLAUDE.md
