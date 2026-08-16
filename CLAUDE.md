@@ -87,6 +87,7 @@ SUPABASE_KEY=your_supabase_anon_key_here
 
 ### Backend (`backend/`)
 - `supabase_client.py`: Supabase connection and query functions
+- `user_system.py`: Helper functions to get or create players and display player info
 - Contains reusable functions for database access
 
 ### Frontend (`frontend/`)

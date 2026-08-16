@@ -36,3 +36,24 @@ def get_player_by_id(player_id: int):
         return None
 
     return response.data[0]
+
+
+def create_player(player_id: int, name: str = "New Player", money: int = 0, level: int = 1):
+    """Create a new player with the given ID and optional default values."""
+    supabase = get_supabase_client()
+
+    data = {
+        "id": player_id,
+        "name": name,
+        "money": money,
+        "level": level
+    }
+
+    response = supabase.table("player").insert(data).execute()
+
+    # Assuming insert returns list of inserted rows
+    if response.data:
+        return response.data[0]
+    else:
+        # If no data returned, fetch the newly created player to confirm
+        return get_player_by_id(player_id)

@@ -1,6 +1,6 @@
 from backend.supabase_client import get_player_by_id
 
-player = get_player_by_id(0)
+player = get_player_by_id(1)
 
 if player:
     print(f"ID: {player['id']}")
