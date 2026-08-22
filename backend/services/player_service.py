@@ -11,24 +11,15 @@ def get_player_by_name(name: str):
     return player_repository.get_player_by_name(name)
 
 
-def create_new_player(
-    name: str = "New Player",
-    money: int = 0,
-    level: int = 1,
-):
-    """Create a new player."""
+def create_new_player(name: str = "New Player"):
+    """Create a new player with default starting values."""
 
     if not name or not name.strip():
         name = "New Player"
 
     name = name.strip()
 
-    if money < 0:
-        raise ValueError("Money cannot be negative")
-
-    if level < 1:
-        raise ValueError("Level must be at least 1")
-
+    # Check if the name already exists
     existing_player = player_repository.get_player_by_name(name)
 
     if existing_player:
@@ -36,6 +27,6 @@ def create_new_player(
 
     return player_repository.create_player(
         name=name,
-        money=money,
-        level=level,
+        money=100,
+        level=1,
     )

@@ -17,22 +17,10 @@ def main(page: ft.Page):
         width=200,
     )
 
-    # Inputs for creating a new player
+    # Input for creating a new player
     name_input = ft.TextField(
         label="Name",
         value="New Player",
-        width=200,
-    )
-
-    money_input = ft.TextField(
-        label="Money",
-        value="0",
-        width=200,
-    )
-
-    level_input = ft.TextField(
-        label="Level",
-        value="1",
         width=200,
     )
 
@@ -56,7 +44,7 @@ def main(page: ft.Page):
                     ft.Text(f"Name: {player['name']}", size=20)
                 )
                 player_info.controls.append(
-                    ft.Text(f"Money: {player['money']}", size=20)
+                    ft.Text(f"Money: ${player['money']}", size=20)
                 )
                 player_info.controls.append(
                     ft.Text(f"Level: {player['level']}", size=20)
@@ -107,30 +95,8 @@ def main(page: ft.Page):
             if not name:
                 name = "New Player"
 
-            # Validate money and level separately
-            try:
-                money = int(money_input.value)
-                level = int(level_input.value)
-            except ValueError:
-                player_info.controls.clear()
-                player_info.controls.append(
-                    ft.Text(
-                        "Please enter valid numbers for Money and Level",
-                        size=20,
-                        color="red",
-                    )
-                )
-                page.update()
-                return
+            new_player = create_new_player(name=name)
 
-            # Create player through service
-            new_player = create_new_player(
-                name=name,
-                money=money,
-                level=level,
-            )
-
-            # Show result
             player_info.controls.clear()
 
             player_info.controls.append(
@@ -157,7 +123,7 @@ def main(page: ft.Page):
 
             player_info.controls.append(
                 ft.Text(
-                    f"Money: {new_player['money']}",
+                    f"Money: ${new_player['money']}",
                     size=20,
                 )
             )
@@ -169,15 +135,11 @@ def main(page: ft.Page):
                 )
             )
 
-            # Reset inputs
             name_input.value = "New Player"
-            money_input.value = "0"
-            level_input.value = "1"
 
             page.update()
 
         except ValueError as ex:
-            # Business validation errors
             player_info.controls.clear()
             player_info.controls.append(
                 ft.Text(
@@ -217,30 +179,27 @@ def main(page: ft.Page):
                     size=30,
                     weight=ft.FontWeight.BOLD,
                 ),
+
                 ft.Row(
                     [player_id_input, fetch_button],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
+
                 ft.Divider(),
+
                 ft.Text(
                     "Create New Player",
                     size=20,
                     weight=ft.FontWeight.W_500,
                 ),
+
                 ft.Row(
-                    [
-                        name_input,
-                        money_input,
-                        level_input,
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    wrap=True,
-                ),
-                ft.Row(
-                    [create_button],
+                    [name_input, create_button],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
+
                 ft.Divider(),
+
                 player_info,
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
