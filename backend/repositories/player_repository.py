@@ -20,6 +20,26 @@ def get_player_by_id(player_id: int):
     return response.data[0]
 
 
+def get_player_by_name(name: str):
+    """Get a player by name."""
+
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("player")
+        .select("id, name, money, level")
+        .eq("name", name)
+        .limit(1)
+        .execute()
+    )
+
+    if not response.data:
+        return None
+
+    return response.data[0]
+
+
 def create_player(
     name: str = "New Player",
     money: int = 0,
