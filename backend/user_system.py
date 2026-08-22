@@ -1,6 +1,6 @@
 from backend.supabase_client import get_player_by_id, create_player
 
-def get_or_create_player(player_id: int, name: str = "New Player", money: int = 0, level: int = 1):
+def get_or_create_player(player_id: int | None = None, name: str = "New Player", money: int = 0, level: int = 1):
     """
     Get a player by ID. If the player does not exist, create a new one with the given ID and optional defaults.
 
@@ -8,7 +8,7 @@ def get_or_create_player(player_id: int, name: str = "New Player", money: int = 
     """
     player = get_player_by_id(player_id)
     if player is None:
-        player = create_player(player_id, name=name, money=money, level=level)
+        player = create_player(name=name, money=money, level=level)
     return player
 
 def show_player(player_id: int):
