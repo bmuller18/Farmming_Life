@@ -1,7 +1,18 @@
+# Environment variables
 .env
+
+# Virtual environments
+env/
 .venv/
-.claude
-.cursor
-.vscode
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDEs / editors
+.vscode/
+.cursor/
+.claude/
+
+# Project files
 CLAUDE.md
-_pycache_/
