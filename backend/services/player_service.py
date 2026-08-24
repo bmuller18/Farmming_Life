@@ -1,4 +1,5 @@
 from backend.repositories import player_repository
+from backend.repositories import plot_repository
 
 
 def get_player(player_id: int):
@@ -25,8 +26,14 @@ def create_new_player(name: str = "New Player"):
     if existing_player:
         raise ValueError(f"Player name '{name}' already exists")
 
-    return player_repository.create_player(
+    # Create player
+    player = player_repository.create_player(
         name=name,
         money=100,
         level=1,
     )
+
+    # Create the 3 free starting plots
+    plot_repository.create_starting_plots(player["id"])
+
+    return player
