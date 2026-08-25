@@ -3,24 +3,33 @@ import flet as ft
 
 class PlotCard(ft.Container):
 
-    def __init__(self, plot_number):
-
+    def __init__(self, plot):
         super().__init__()
 
-        self.width = 180
-        self.height = 180
+        self.plot = plot
+
+        self.width = 80
+        self.height = 80
         self.bgcolor = ft.Colors.GREY_200
         self.border_radius = 10
+
+        plot_name = plot.get("name", "Plot")
+        status = plot.get("status", "empty")
+
+        if status == "empty":
+            status_text = "Empty"
+        else:
+            status_text = status.capitalize()
 
         self.content = ft.Column(
             controls=[
                 ft.Text(
-                    f"Plot {plot_number}",
+                    plot_name,
                     size=20,
                     weight=ft.FontWeight.BOLD,
                 ),
                 ft.Text(
-                    "Empty",
+                    status_text,
                     size=16,
                     color=ft.Colors.GREY,
                 ),
