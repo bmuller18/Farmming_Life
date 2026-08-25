@@ -16,3 +16,20 @@ def buy_house(player_id: int, house_id: int):
         raise ValueError("House purchase failed")
 
     return response.data[0]
+
+
+def get_houses_by_player(player_id: int):
+    """Get all houses owned by a player."""
+
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("houses")
+        .select("*")
+        .eq("player_id", player_id)
+        .order("id")
+        .execute()
+    )
+
+    return response.data
