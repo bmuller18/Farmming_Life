@@ -1,37 +1,17 @@
 from backend.supabase_client import get_supabase_client
 
 
-def create_starting_plots(player_id):
-    supabase = get_supabase_client()
+def get_plots_by_house(house_id: int):
+    """Get all plots belonging to a house."""
 
-    plots = [
-        {
-            "player_id": player_id,
-            "plot_number": 1,
-            "price": 0,
-            "purchased": True,
-            "status": "empty",
-        },
-        {
-            "player_id": player_id,
-            "plot_number": 2,
-            "price": 0,
-            "purchased": True,
-            "status": "empty",
-        },
-        {
-            "player_id": player_id,
-            "plot_number": 3,
-            "price": 0,
-            "purchased": True,
-            "status": "empty",
-        },
-    ]
+    supabase = get_supabase_client()
 
     response = (
         supabase
         .table("plots")
-        .insert(plots)
+        .select("*")
+        .eq("house_id", house_id)
+        .order("id")
         .execute()
     )
 
