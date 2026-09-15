@@ -11,11 +11,11 @@ def get_price_by_crop_type(crop_type_id: int):
 		.table("prices")
 		.select("*")
 		.eq("crop_type_id", crop_type_id)
-		.single()
+		.limit(1)
 		.execute()
 	)
 
-	return response.data if response.data else None
+	return response.data[0] if response.data else None
 
 
 def get_all_prices():
