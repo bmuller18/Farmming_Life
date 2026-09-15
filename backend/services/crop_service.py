@@ -60,6 +60,11 @@ def harvest_crop_from_plot(crop_id: int):
 	return crop
 
 
+def get_harvested_crops(player_id: int):
+	"""Get all harvested crops (inventory) for a player."""
+	return crop_repository.get_harvested_crops_by_player(player_id)
+
+
 def get_crop_status(crop_id: int):
 	"""Get the status of a crop (growing, ready, harvested)."""
 

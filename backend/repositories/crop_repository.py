@@ -123,6 +123,24 @@ def harvest_crop(crop_id: int):
 	raise RuntimeError("Failed to harvest crop")
 
 
+def get_harvested_crops_by_player(player_id: int):
+	"""Get all harvested crops (inventory) for a player."""
+
+	supabase = get_supabase_client()
+
+	response = (
+		supabase
+		.table("crops")
+		.select("*, plot_id(house_id(player_id)), crop_types(*)")
+		.eq("plot_id.house_id.player_id", player_id)
+		.not_("harvested_at", "is", None)
+		.order("harvested_at", desc=True)
+		.execute()
+	)
+
+	return response.data
+
+
 def is_crop_ready(crop_id: int) -> bool:
 	"""Check if a crop is ready to harvest."""
 

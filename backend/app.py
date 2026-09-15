@@ -19,6 +19,7 @@ from backend.services.crop_service import (
     get_active_crop,
     plant_crop_in_plot,
     harvest_crop_from_plot,
+    get_harvested_crops,
 )
 from backend.services.economy_service import (
     get_seed_price,
@@ -138,6 +139,16 @@ def harvest_crop(crop_id):
         print(f"Exception in harvest: {str(e)}")
         import traceback
         traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/player/<int:player_id>/inventory", methods=["GET"])
+def get_inventory(player_id):
+    """Get player's harvested crops (inventory)."""
+    try:
+        crops = get_harvested_crops(player_id)
+        return jsonify(crops)
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
