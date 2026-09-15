@@ -174,17 +174,21 @@ async function loadInventory() {
     crops.forEach(crop => {
         const cropType = crop.crop_types.name;
         const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-        const totalValue = crop.yield_amount * cropPrice;
+        const totalYield = crop.total_yield;
+        const totalValue = totalYield * cropPrice;
 
         inventoryHTML += `
             <div class="inventory-item">
                 <div class="item-header">
                     <div class="item-name">${cropType}</div>
-                    <div class="item-yield">🌾 ${crop.yield_amount}</div>
+                    <div class="item-yield">x${totalYield}</div>
                 </div>
-                <div class="item-value">💰 $${totalValue}</div>
-                <button class="btn btn-sell" onclick="sellInventoryCrop(${crop.id}, '${cropType}', ${crop.yield_amount}, ${cropPrice})" style="width: 100%; margin-top: 10px;">
-                    Sell
+                <div class="item-value">💰 $${totalValue.toLocaleString()}</div>
+                <div style="font-size: 0.85em; color: var(--text-secondary); margin: 6px 0;">
+                    ${totalYield} × $${cropPrice} = $${totalValue.toLocaleString()}
+                </div>
+                <button class="btn btn-sell" onclick="sellAllCrops('${crop.crop_type_id}', '${cropType}', ${totalYield}, ${cropPrice})" style="width: 100%; margin-top: 10px;">
+                    Sell All
                 </button>
             </div>
         `;
@@ -194,25 +198,48 @@ async function loadInventory() {
     document.getElementById("farms-section").innerHTML = inventoryHTML;
 }
 
-async function sellInventoryCrop(cropId, cropName, yieldAmount, cropPrice) {
+async function sellAllCrops(cropTypeId, cropName, totalYield, cropPrice) {
     try {
-        const response = await fetch(`${API_BASE}/crop/${cropId}/sell`, {
+        // Get all crops of this type from the plot data
+        const farmsResponse = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
+        const houses = await farmsResponse.json();
+
+        let cropToSell = null;
+
+        for (const house of houses) {
+            const plotsResponse = await fetch(`${API_BASE}/house/${house.id}/plots`);
+            const plots = await plotsResponse.json();
+
+            for (const plot of plots) {
+                const cropResponse = await fetch(`${API_BASE}/plot/${plot.id}/crop`);
+                const { crop } = await cropResponse.json();
+
+                if (crop && crop.crop_type_id == cropTypeId && crop.harvested_at) {
+                    cropToSell = crop;
+                    break;
+                }
+            }
+            if (cropToSell) break;
+        }
+
+        if (!cropToSell) {
+            showMessage("❌ No hay cultivos para vender", "error");
+            return;
+        }
+
+        const sellResponse = await fetch(`${API_BASE}/crop/${cropToSell.id}/sell`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ player_id: PLAYER_ID })
         });
 
-        if (!response.ok) throw new Error("Error al vender");
+        if (!sellResponse.ok) throw new Error("Error al vender");
 
-        const result = await response.json();
+        const result = await sellResponse.json();
         showMessage(`✅ ¡Vendido! +$${result.total_revenue} 💸`, "success");
 
-        try {
-            await loadPlayer();
-            await loadInventory();
-        } catch (error) {
-            console.error("Error reloading after sell:", error);
-        }
+        await loadPlayer();
+        await loadInventory();
 
     } catch (error) {
         showMessage("❌ " + error.message, "error");

@@ -140,7 +140,8 @@ def get_harvested_crops_by_player(player_id: int):
 		if not response.data:
 			return []
 
-		player_crops = []
+		# Group by crop_type_id and sum yields
+		grouped = {}
 		for crop in response.data:
 			# Filter: only harvested crops from this player
 			if crop.get("harvested_at") is None:
@@ -150,9 +151,19 @@ def get_harvested_crops_by_player(player_id: int):
 			if isinstance(plot, dict):
 				house = plot.get("house_id")
 				if isinstance(house, dict) and house.get("player_id") == player_id:
-					player_crops.append(crop)
+					crop_type_id = crop.get("crop_type_id")
 
-		return player_crops
+					if crop_type_id not in grouped:
+						grouped[crop_type_id] = {
+							"crop_type_id": crop_type_id,
+							"crop_types": crop.get("crop_types"),
+							"total_yield": 0,
+							"last_harvested": crop.get("harvested_at")
+						}
+
+					grouped[crop_type_id]["total_yield"] += crop.get("yield_amount", 0)
+
+		return list(grouped.values())
 	except Exception as e:
 		print(f"[INVENTORY ERROR] {str(e)}")
 		import traceback
