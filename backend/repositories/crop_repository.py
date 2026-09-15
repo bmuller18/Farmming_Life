@@ -1,5 +1,5 @@
 from backend.supabase_client import get_supabase_client
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 def get_crops_by_plot(plot_id: int):
@@ -147,6 +147,7 @@ def is_crop_ready(crop_id: int) -> bool:
 		return False
 
 	# Check if ready_at has passed
-	ready_at = datetime.fromisoformat(crop["ready_at"].replace("Z", "+00:00"))
-	now = datetime.utcnow().replace(tzinfo=ready_at.tzinfo)
+	ready_at_str = crop["ready_at"]
+	ready_at = datetime.fromisoformat(ready_at_str.replace("Z", "+00:00"))
+	now = datetime.now(timezone.utc)
 	return now >= ready_at
