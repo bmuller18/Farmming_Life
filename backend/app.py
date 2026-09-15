@@ -26,6 +26,7 @@ from backend.services.economy_service import (
     get_crop_price,
     buy_seeds,
     sell_crops,
+    sell_crops_batch,
     get_all_prices,
     get_player_balance,
 )
@@ -148,6 +149,27 @@ def get_inventory(player_id):
     try:
         crops = get_harvested_crops(player_id)
         return jsonify(crops)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/crops/sell-batch", methods=["POST"])
+def sell_batch():
+    """Sell multiple crops of the same type at once."""
+    try:
+        data = request.get_json()
+        player_id = data.get("player_id")
+        crop_type_id = data.get("crop_type_id")
+        quantity = data.get("quantity", 1)
+
+        if not player_id or not crop_type_id:
+            return jsonify({"error": "player_id and crop_type_id required"}), 400
+
+        result = sell_crops_batch(player_id, crop_type_id, quantity)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

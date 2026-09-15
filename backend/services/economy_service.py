@@ -100,3 +100,48 @@ def get_all_prices():
 def get_player_balance(player_id: int):
 	"""Get player's current money balance."""
 	return price_repository.get_player_money(player_id)
+
+
+def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
+	"""Sell multiple harvested crops of the same type."""
+
+	from backend.supabase_client import get_supabase_client
+
+	supabase = get_supabase_client()
+
+	# Get harvested crops of this type for this player
+	from backend.repositories.crop_repository import get_harvested_crops_by_player
+	all_harvested = get_harvested_crops_by_player(player_id)
+
+	# Filter to only the crops of this type
+	crops_to_sell = [c for c in all_harvested if c.get("crop_type_id") == crop_type_id]
+
+	if len(crops_to_sell) < quantity:
+		raise ValueError(f"Only {len(crops_to_sell)} crops available, requested {quantity}")
+
+	# Get crop price
+	crop_price = get_crop_price(crop_type_id)
+
+	# Sell first N crops
+	total_revenue = 0
+	sold_count = 0
+
+	for crop in crops_to_sell[:quantity]:
+		yield_amount = crop.get("yield_amount", 0)
+		revenue = yield_amount * crop_price
+		total_revenue += revenue
+		sold_count += 1
+
+		# Mark as sold by updating the crop (we'll just delete or mark it)
+		supabase.table("crops").delete().eq("id", crop["id"]).execute()
+
+	# Add money to player
+	player = price_repository.update_player_money(player_id, total_revenue)
+
+	return {
+		"sold_count": sold_count,
+		"crop_type_id": crop_type_id,
+		"crop_price": crop_price,
+		"total_revenue": total_revenue,
+		"new_balance": player["money"]
+	}
