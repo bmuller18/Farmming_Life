@@ -588,3 +588,20 @@ body {
     color: var(--yellow-gold);
     margin-bottom: 8px;
 }
+
+/* IN PROGRESS BADGE */
+.nav-link.in-progress {
+    position: relative;
+}
+
+.badge-in-progress {
+    display: inline-block;
+    font-size: 0.65em;
+    background: linear-gradient(135deg, var(--orange-soft) 0%, #D97A48 100%);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    margin-left: 6px;
+    white-space: nowrap;
+}
