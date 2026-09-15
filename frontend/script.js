@@ -387,7 +387,10 @@ async function harvestCrop(cropId, cropName, yieldAmount) {
             throw new Error(error.error || "Error al cosechar");
         }
 
-        showMessage(`✅ ¡Cosechado! ${yieldAmount} unidades guardadas en el inventario`, "success");
+        const result = await harvestResponse.json();
+        const actualYield = result.yield_amount || yieldAmount;
+
+        showMessage(`✅ ¡Cosechado! ${actualYield} unidades guardadas en el inventario`, "success");
 
         setTimeout(() => {
             loadPlayer();
