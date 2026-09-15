@@ -85,6 +85,13 @@
             margin-bottom: 8px;
         }
 
+        .player-money {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: var(--yellow-gold);
+            margin: 8px 0;
+        }
+
         .player-level {
             font-size: 0.85em;
             color: var(--text-secondary);
@@ -293,6 +300,13 @@
             margin-top: 6px;
         }
 
+        .plot-price {
+            font-size: 0.75em;
+            color: var(--yellow-gold);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
         /* BUTTONS */
         .btn {
             padding: 12px 24px;
@@ -330,6 +344,15 @@
         .btn-secondary:hover {
             background: var(--green-ag);
             color: white;
+        }
+
+        .btn-sell {
+            background: linear-gradient(135deg, var(--yellow-gold) 0%, #E8B94D 100%);
+            color: var(--text-primary);
+        }
+
+        .btn-sell:hover {
+            box-shadow: 6px 6px 14px rgba(242, 199, 92, 0.3);
         }
 
         /* MODAL */
@@ -447,6 +470,12 @@
             gap: 16px;
         }
 
+        .crop-price {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--yellow-gold);
+        }
+
         /* MESSAGE */
         .message {
             display: none;
@@ -521,6 +550,7 @@
 
             <div class="player-card">
                 <div class="player-name" id="sidebarName">Muller</div>
+                <div class="player-money" id="sidebarMoney">$0</div>
                 <div class="player-level" id="sidebarLevel">Level 1</div>
             </div>
 
@@ -567,7 +597,7 @@
                     <div class="stat-box">
                         <span class="stat-icon">💰</span>
                         <div>
-                            <div class="stat-value" id="headerMoney">9,910</div>
+                            <div class="stat-value" id="headerMoney">0</div>
                             <div class="stat-label">Money</div>
                         </div>
                     </div>
@@ -588,7 +618,7 @@
         </main>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL PLANTAR -->
     <div id="plantModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -596,6 +626,17 @@
                 <button class="modal-close" onclick="closePlantModal()">✕</button>
             </div>
             <ul id="cropsList" class="crop-list"></ul>
+        </div>
+    </div>
+
+    <!-- MODAL VENDER -->
+    <div id="sellModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">💸 Sell Crop</h2>
+                <button class="modal-close" onclick="closeSellModal()">✕</button>
+            </div>
+            <div id="sellInfo"></div>
         </div>
     </div>
 
@@ -607,7 +648,9 @@
         const PLAYER_ID = 2;
 
         let currentPlotId = null;
+        let currentCropId = null;
         let cropTypes = [];
+        let prices = {};
         let currentPage = "dashboard";
 
         // ════════════════════════════════════════════════════════════════
@@ -617,6 +660,7 @@
         async function init() {
             try {
                 await loadPlayer();
+                await loadPrices();
                 await loadCropTypes();
                 await loadFarms();
             } catch (error) {
@@ -634,9 +678,23 @@
 
             const player = await response.json();
             document.getElementById("sidebarName").textContent = player.name;
+            document.getElementById("sidebarMoney").textContent = `$${player.money.toLocaleString()}`;
             document.getElementById("sidebarLevel").textContent = `Level ${player.level}`;
             document.getElementById("headerMoney").textContent = player.money.toLocaleString();
             document.getElementById("headerLevel").textContent = player.level;
+        }
+
+        async function loadPrices() {
+            const response = await fetch(`${API_BASE}/prices`);
+            if (!response.ok) throw new Error("No se pudo cargar precios");
+
+            const pricesData = await response.json();
+            pricesData.forEach(p => {
+                prices[p.crop_type_id] = {
+                    seed_price: p.seed_price,
+                    crop_price: p.crop_price
+                };
+            });
         }
 
         async function loadCropTypes() {
@@ -684,11 +742,14 @@
                         const isReady = now >= readyAt;
 
                         if (isReady) {
+                            const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
+                            const totalValue = crop.yield_amount * cropPrice;
                             farmsHTML += `
-                                <div class="plot-card ready" onclick="harvestCrop(${crop.id})">
+                                <div class="plot-card ready" onclick="openSellModal(${crop.id}, '${cropType}', ${crop.yield_amount}, ${cropPrice})">
                                     <div class="plot-name">${plot.name}</div>
                                     <div class="plot-emoji">🌾</div>
                                     <div class="plot-crop-name">${cropType}</div>
+                                    <div class="plot-price">💰 $${totalValue}</div>
                                     <div class="plot-status">✨ Ready!</div>
                                 </div>
                             `;
@@ -723,21 +784,23 @@
         }
 
         // ════════════════════════════════════════════════════════════════
-        // ACCIONES
+        // ACCIONES - PLANTAR
         // ════════════════════════════════════════════════════════════════
 
         function openPlantModal(plotId) {
             currentPlotId = plotId;
 
-            const cropsListHTML = cropTypes.map(crop => `
-                <li class="crop-item" onclick="plantCrop(${crop.id})">
+            const cropsListHTML = cropTypes.map(crop => {
+                const seedPrice = prices[crop.id]?.seed_price || 0;
+                return `
+                <li class="crop-item" onclick="plantCrop(${crop.id}, ${seedPrice})">
                     <div class="crop-name">🌾 ${crop.name}</div>
                     <div class="crop-info">
                         <span>⏱️ ${Math.floor(crop.growth_time / 60)}m</span>
-                        <span>📦 ${crop.base_yield} yield</span>
+                        <span class="crop-price">🌱 $${seedPrice}</span>
                     </div>
                 </li>
-            `).join("");
+            `}).join("");
 
             document.getElementById("cropsList").innerHTML = cropsListHTML;
             document.getElementById("plantModal").classList.add("active");
@@ -747,35 +810,33 @@
             document.getElementById("plantModal").classList.remove("active");
         }
 
-        async function plantCrop(cropTypeId) {
+        async function plantCrop(cropTypeId, seedPrice) {
             try {
-                const response = await fetch(`${API_BASE}/plot/${currentPlotId}/plant`, {
+                // Primero comprar semillas
+                const buyResponse = await fetch(`${API_BASE}/player/${PLAYER_ID}/buy-seeds`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ crop_type_id: cropTypeId, quantity: 1 })
+                });
+
+                if (!buyResponse.ok) {
+                    const error = await buyResponse.json();
+                    throw new Error(error.error || "Error buying seeds");
+                }
+
+                const buyResult = await buyResponse.json();
+
+                // Luego plantar
+                const plantResponse = await fetch(`${API_BASE}/plot/${currentPlotId}/plant`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ crop_type_id: cropTypeId })
                 });
 
-                if (!response.ok) throw new Error("Error al plantar");
+                if (!plantResponse.ok) throw new Error("Error al plantar");
 
-                showMessage("✅ ¡Cultivo plantado!", "success");
+                showMessage(`✅ ¡Semilla plantada! -$${seedPrice}`, "success");
                 closePlantModal();
-                setTimeout(loadFarms, 500);
-
-            } catch (error) {
-                showMessage("❌ " + error.message, "error");
-            }
-        }
-
-        async function harvestCrop(cropId) {
-            try {
-                const response = await fetch(`${API_BASE}/crop/${cropId}/harvest`, {
-                    method: "POST"
-                });
-
-                if (!response.ok) throw new Error("Error al cosechar");
-
-                const crop = await response.json();
-                showMessage(`✅ ¡Cosechado! +${crop.yield_amount} 🌾`, "success");
                 setTimeout(() => {
                     loadPlayer();
                     loadFarms();
@@ -785,6 +846,64 @@
                 showMessage("❌ " + error.message, "error");
             }
         }
+
+        // ════════════════════════════════════════════════════════════════
+        // ACCIONES - VENDER
+        // ════════════════════════════════════════════════════════════════
+
+        function openSellModal(cropId, cropName, yieldAmount, cropPrice) {
+            currentCropId = cropId;
+            const totalValue = yieldAmount * cropPrice;
+
+            document.getElementById("sellInfo").innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">🌾</div>
+                    <div style="font-size: 1.2em; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">${cropName}</div>
+                    <div style="font-size: 1em; color: var(--text-secondary); margin-bottom: 20px;">
+                        ${yieldAmount} units × $${cropPrice} = <strong style="color: var(--yellow-gold); font-size: 1.3em;">$${totalValue}</strong>
+                    </div>
+                </div>
+                <button class="btn btn-sell" onclick="sellCrop()" style="width: 100%; margin-bottom: 10px;">
+                    💰 Sell for $${totalValue}
+                </button>
+                <button class="btn btn-secondary" onclick="closeSellModal()" style="width: 100%;">
+                    Cancel
+                </button>
+            `;
+
+            document.getElementById("sellModal").classList.add("active");
+        }
+
+        function closeSellModal() {
+            document.getElementById("sellModal").classList.remove("active");
+        }
+
+        async function sellCrop() {
+            try {
+                const response = await fetch(`${API_BASE}/crop/${currentCropId}/sell`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ player_id: PLAYER_ID })
+                });
+
+                if (!response.ok) throw new Error("Error al vender");
+
+                const result = await response.json();
+                showMessage(`✅ ¡Vendido! +$${result.total_revenue} 💸`, "success");
+                closeSellModal();
+                setTimeout(() => {
+                    loadPlayer();
+                    loadFarms();
+                }, 500);
+
+            } catch (error) {
+                showMessage("❌ " + error.message, "error");
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // UI HELPERS
+        // ════════════════════════════════════════════════════════════════
 
         function setPage(page) {
             currentPage = page;
@@ -811,9 +930,11 @@
 
         // Modal close on outside click
         document.getElementById("plantModal").addEventListener("click", (e) => {
-            if (e.target.id === "plantModal") {
-                closePlantModal();
-            }
+            if (e.target.id === "plantModal") closePlantModal();
+        });
+
+        document.getElementById("sellModal").addEventListener("click", (e) => {
+            if (e.target.id === "sellModal") closeSellModal();
         });
 
         // ════════════════════════════════════════════════════════════════
