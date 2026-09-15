@@ -109,6 +109,9 @@ def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
 
 	supabase = get_supabase_client()
 
+	# Asegurar que crop_type_id es int
+	crop_type_id = int(crop_type_id)
+
 	# Get all crops
 	crops_response = supabase.table("crops").select("*").execute()
 
@@ -124,7 +127,7 @@ def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
 		type_id = c.get("crop_type_id")
 		harvested = c.get("harvested_at")
 
-		if plot_id and plot_id in plot_ids and type_id == crop_type_id and harvested:
+		if plot_id and plot_id in plot_ids and int(type_id) == crop_type_id and harvested:
 			harvested_crops.append(c)
 
 	if len(harvested_crops) < quantity:
