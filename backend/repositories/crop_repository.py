@@ -82,6 +82,8 @@ def plant_crop(plot_id: int, crop_type_id: int):
 def harvest_crop(crop_id: int):
 	"""Harvest a crop."""
 
+	import random
+
 	supabase = get_supabase_client()
 
 	# Get crop with crop type info
@@ -99,13 +101,15 @@ def harvest_crop(crop_id: int):
 
 	crop = crop_response.data
 
-	# Calculate yield (base yield from crop type)
+	# Calculate yield (base yield ± random 20-50%)
 	base_yield = crop["crop_types"]["base_yield"]
+	variance = random.uniform(0.8, 1.5)  # 80% to 150% of base
+	calculated_yield = max(1, int(base_yield * variance))
 
 	# Update crop with harvest info
 	update_data = {
 		"harvested_at": datetime.utcnow().isoformat(),
-		"yield_amount": base_yield,
+		"yield_amount": calculated_yield,
 		"updated_at": datetime.utcnow().isoformat(),
 	}
 
