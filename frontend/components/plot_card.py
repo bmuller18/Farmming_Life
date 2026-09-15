@@ -16,7 +16,6 @@ class PlotCard(ft.Container):
         self.height = 100
         self.border_radius = 10
         self.padding = 8
-        self.cursor = ft.MouseCursor.POINTER
 
         plot_name = plot.get("name", "Plot")
 
