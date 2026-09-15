@@ -371,7 +371,7 @@ async function sellCrop() {
 // UI HELPERS
 // ════════════════════════════════════════════════════════════════
 
-function setPage(page) {
+async function setPage(page) {
     currentPage = page;
     document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
     event.target.closest(".nav-link").classList.add("active");
@@ -386,10 +386,14 @@ function setPage(page) {
 
     document.getElementById("pageTitle").textContent = titles[page];
 
-    if (page === "dashboard") {
-        loadFarms();
-    } else if (page === "inventory") {
-        loadInventory();
+    try {
+        if (page === "dashboard" || page === "farm") {
+            await loadFarms();
+        } else if (page === "inventory") {
+            await loadInventory();
+        }
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
     }
 }
 
@@ -424,13 +428,13 @@ function updateCountdowns() {
         if (totalSeconds === 0) {
             const plotCard = document.getElementById(`plot-${id}`);
             if (plotCard) {
-                const cropId = plotCard.dataset.cropId;
+                const cropId = parseInt(plotCard.dataset.cropId);
                 const cropName = plotCard.dataset.cropName;
-                const yieldAmount = plotCard.dataset.yield;
+                const yieldAmount = parseInt(plotCard.dataset.yield) || 10;
 
                 plotCard.classList.remove('with-crop');
                 plotCard.classList.add('ready');
-                plotCard.onclick = () => harvestCrop(parseInt(cropId), cropName, parseInt(yieldAmount));
+                plotCard.onclick = () => harvestCrop(cropId, cropName, yieldAmount);
 
                 plotCard.innerHTML = `
                     <div class="plot-name">${plotCard.querySelector('.plot-name').textContent}</div>
