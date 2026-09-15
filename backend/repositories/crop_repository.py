@@ -129,55 +129,27 @@ def get_harvested_crops_by_player(player_id: int):
 	supabase = get_supabase_client()
 
 	try:
-		# Get all houses for the player
-		houses_response = (
-			supabase
-			.table("houses")
-			.select("id")
-			.eq("player_id", player_id)
-			.execute()
-		)
-
-		if not houses_response.data:
-			return []
-
-		house_ids = [house["id"] for house in houses_response.data]
-
-		# Get all plots for those houses
-		plots_response = (
-			supabase
-			.table("plots")
-			.select("id")
-		)
-
-		for house_id in house_ids:
-			plots_response = plots_response.or_(f"house_id.eq.{house_id}")
-
-		plots_response = plots_response.execute()
-
-		if not plots_response.data:
-			return []
-
-		plot_ids = [plot["id"] for plot in plots_response.data]
-
-		# Get harvested crops for those plots
-		crops_response = (
+		response = (
 			supabase
 			.table("crops")
-			.select("*, crop_types(*)")
-		)
-
-		for plot_id in plot_ids:
-			crops_response = crops_response.or_(f"plot_id.eq.{plot_id}")
-
-		crops_response = (
-			crops_response
+			.select("*, crop_types(*), plot_id(house_id(player_id))")
 			.not_("harvested_at", "is", None)
 			.order("harvested_at", desc=True)
 			.execute()
 		)
 
-		return crops_response.data
+		if not response.data:
+			return []
+
+		player_crops = []
+		for crop in response.data:
+			plot = crop.get("plot_id")
+			if isinstance(plot, dict):
+				house = plot.get("house_id")
+				if isinstance(house, dict) and house.get("player_id") == player_id:
+					player_crops.append(crop)
+
+		return player_crops
 	except Exception as e:
 		print(f"[INVENTORY ERROR] {str(e)}")
 		import traceback
