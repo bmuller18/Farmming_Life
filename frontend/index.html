@@ -780,8 +780,11 @@
                             const seconds = Math.floor((timeLeftMs % 60000) / 1000);
                             const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+                            const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
+                            const totalValue = crop.yield_amount * cropPrice;
+
                             farmsHTML += `
-                                <div class="plot-card with-crop" id="plot-${crop.id}">
+                                <div class="plot-card with-crop" id="plot-${crop.id}" data-crop-id="${crop.id}" data-crop-name="${cropType}" data-yield="${crop.yield_amount}" data-price="${cropPrice}" data-total="${totalValue}">
                                     <div class="plot-name">${plot.name}</div>
                                     <div class="plot-emoji">🌱</div>
                                     <div class="plot-crop-name">${cropType}</div>
@@ -986,11 +989,6 @@
                 const currentText = el.textContent;
                 const parts = currentText.split(':').map(p => parseInt(p));
 
-                if (parts[0] === 0 && parts[1] === 0 && parts[2] === 0) {
-                    el.textContent = '00:00:00';
-                    return;
-                }
-
                 let totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
                 totalSeconds = Math.max(0, totalSeconds - 1);
 
@@ -998,7 +996,32 @@
                 const m = Math.floor((totalSeconds % 3600) / 60);
                 const s = totalSeconds % 60;
 
-                el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                const newTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                el.textContent = newTime;
+
+                // When countdown reaches 0, transform to ready card
+                if (totalSeconds === 0) {
+                    const plotCard = document.getElementById(`plot-${id}`);
+                    if (plotCard) {
+                        const cropId = plotCard.dataset.cropId;
+                        const cropName = plotCard.dataset.cropName;
+                        const yieldAmount = plotCard.dataset.yield;
+                        const cropPrice = parseFloat(plotCard.dataset.price);
+                        const totalValue = parseFloat(plotCard.dataset.total);
+
+                        plotCard.classList.remove('with-crop');
+                        plotCard.classList.add('ready');
+                        plotCard.onclick = () => harvestAndSell(parseInt(cropId), cropName, parseInt(yieldAmount), cropPrice);
+
+                        plotCard.innerHTML = `
+                            <div class="plot-name">${plotCard.querySelector('.plot-name').textContent}</div>
+                            <div class="plot-emoji">🌾</div>
+                            <div class="plot-crop-name">${cropName}</div>
+                            <div class="plot-price">💰 $${totalValue}</div>
+                            <div class="plot-status">✨ Ready!</div>
+                        `;
+                    }
+                }
             });
         }
 
