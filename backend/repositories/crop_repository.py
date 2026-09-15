@@ -128,28 +128,46 @@ def get_harvested_crops_by_player(player_id: int):
 
 	supabase = get_supabase_client()
 
-	response = (
+	# Get all houses for the player
+	houses_response = (
+		supabase
+		.table("houses")
+		.select("id")
+		.eq("player_id", player_id)
+		.execute()
+	)
+
+	if not houses_response.data:
+		return []
+
+	house_ids = [house["id"] for house in houses_response.data]
+
+	# Get all plots for those houses
+	plots_response = (
+		supabase
+		.table("plots")
+		.select("id")
+		.in_("house_id", house_ids)
+		.execute()
+	)
+
+	if not plots_response.data:
+		return []
+
+	plot_ids = [plot["id"] for plot in plots_response.data]
+
+	# Get harvested crops for those plots
+	crops_response = (
 		supabase
 		.table("crops")
-		.select("*, crop_types(*), plot_id(house_id(id,player_id))")
+		.select("*, crop_types(*)")
+		.in_("plot_id", plot_ids)
 		.not_("harvested_at", "is", None)
 		.order("harvested_at", desc=True)
 		.execute()
 	)
 
-	if not response.data:
-		return []
-
-	# Filter by player_id since nested filter doesn't work well with Supabase
-	player_crops = []
-	for crop in response.data:
-		try:
-			if crop.get("plot_id", {}).get("house_id", {}).get("player_id") == player_id:
-				player_crops.append(crop)
-		except (TypeError, AttributeError):
-			continue
-
-	return player_crops
+	return crops_response.data
 
 
 def is_crop_ready(crop_id: int) -> bool:
