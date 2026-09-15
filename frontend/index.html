@@ -763,15 +763,12 @@
                         const isReady = now >= readyAt;
 
                         if (isReady) {
-                            const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-                            const totalValue = crop.yield_amount * cropPrice;
                             farmsHTML += `
-                                <div class="plot-card ready" onclick="harvestAndSell(${crop.id}, '${cropType}', ${crop.yield_amount}, ${cropPrice})">
+                                <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${crop.yield_amount})">
                                     <div class="plot-name">${plot.name}</div>
                                     <div class="plot-emoji">🌾</div>
                                     <div class="plot-crop-name">${cropType}</div>
-                                    <div class="plot-price">💰 $${totalValue}</div>
-                                    <div class="plot-status">✨ Ready!</div>
+                                    <div class="plot-status">✨ Ready to Harvest!</div>
                                 </div>
                             `;
                         } else {
@@ -878,13 +875,12 @@
         // ACCIONES - COSECHAR Y VENDER
         // ════════════════════════════════════════════════════════════════
 
-        async function harvestAndSell(cropId, cropName, yieldAmount, cropPrice) {
+        async function harvestCrop(cropId, cropName, yieldAmount) {
             // Prevent double-clicking
             if (harvestingCrops.has(cropId)) return;
             harvestingCrops.add(cropId);
 
             try {
-                // 1. Primero cosechar
                 const harvestResponse = await fetch(`${API_BASE}/crop/${cropId}/harvest`, {
                     method: "POST"
                 });
@@ -894,11 +890,12 @@
                     throw new Error(error.error || "Error al cosechar");
                 }
 
-                showMessage(`✅ ¡Cosechado! ${yieldAmount} unidades`, "success");
+                showMessage(`✅ ¡Cosechado! ${yieldAmount} unidades guardadas en el inventario`, "success");
 
-                // 2. Luego abrir modal para vender
+                // Reload farms after harvest
                 setTimeout(() => {
-                    openSellModal(cropId, cropName, yieldAmount, cropPrice);
+                    loadPlayer();
+                    loadFarms();
                 }, 500);
 
             } catch (error) {
@@ -1018,19 +1015,16 @@
                         const cropId = plotCard.dataset.cropId;
                         const cropName = plotCard.dataset.cropName;
                         const yieldAmount = plotCard.dataset.yield;
-                        const cropPrice = parseFloat(plotCard.dataset.price);
-                        const totalValue = parseFloat(plotCard.dataset.total);
 
                         plotCard.classList.remove('with-crop');
                         plotCard.classList.add('ready');
-                        plotCard.onclick = () => harvestAndSell(parseInt(cropId), cropName, parseInt(yieldAmount), cropPrice);
+                        plotCard.onclick = () => harvestCrop(parseInt(cropId), cropName, parseInt(yieldAmount));
 
                         plotCard.innerHTML = `
                             <div class="plot-name">${plotCard.querySelector('.plot-name').textContent}</div>
                             <div class="plot-emoji">🌾</div>
                             <div class="plot-crop-name">${cropName}</div>
-                            <div class="plot-price">💰 $${totalValue}</div>
-                            <div class="plot-status">✨ Ready!</div>
+                            <div class="plot-status">✨ Ready to Harvest!</div>
                         `;
                     }
                 }
