@@ -148,4 +148,5 @@ def is_crop_ready(crop_id: int) -> bool:
 
 	# Check if ready_at has passed
 	ready_at = datetime.fromisoformat(crop["ready_at"].replace("Z", "+00:00"))
-	return datetime.utcnow() >= ready_at
+	now = datetime.utcnow().replace(tzinfo=ready_at.tzinfo)
+	return now >= ready_at
