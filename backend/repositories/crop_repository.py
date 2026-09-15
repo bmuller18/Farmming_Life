@@ -146,13 +146,25 @@ def is_crop_ready(crop_id: int) -> bool:
 	if crop["harvested_at"]:
 		return False
 
-	# Check if ready_at has passed - compare as naive datetimes
+	# Parse ready_at - handle both with and without timezone
 	ready_at_str = crop["ready_at"]
-	# Parse and remove timezone info
-	ready_at = datetime.fromisoformat(ready_at_str.replace("Z", "+00:00"))
-	if ready_at.tzinfo is not None:
-		ready_at = ready_at.replace(tzinfo=None)
 
-	# Use naive UTC now for comparison
+	# Try parsing with timezone first, then strip it
+	try:
+		# Replace Z with +00:00 for fromisoformat compatibility
+		normalized = ready_at_str.replace("Z", "+00:00")
+		ready_at = datetime.fromisoformat(normalized)
+
+		# If it has timezone info, convert to naive UTC
+		if ready_at.tzinfo is not None:
+			# Convert to UTC and remove timezone
+			ready_at_utc = ready_at.astimezone(timezone.utc)
+			ready_at = ready_at_utc.replace(tzinfo=None)
+	except:
+		# If parsing fails, assume it's naive UTC
+		ready_at = datetime.fromisoformat(ready_at_str)
+
+	# Use naive UTC now for comparison (with 5 second tolerance)
 	now = datetime.utcnow()
-	return now >= ready_at
+	tolerance = timedelta(seconds=5)
+	return now >= (ready_at - tolerance)
