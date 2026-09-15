@@ -131,14 +131,25 @@ def get_harvested_crops_by_player(player_id: int):
 	response = (
 		supabase
 		.table("crops")
-		.select("*, plot_id(house_id(player_id)), crop_types(*)")
-		.eq("plot_id.house_id.player_id", player_id)
+		.select("*, crop_types(*), plot_id(house_id(id,player_id))")
 		.not_("harvested_at", "is", None)
 		.order("harvested_at", desc=True)
 		.execute()
 	)
 
-	return response.data
+	if not response.data:
+		return []
+
+	# Filter by player_id since nested filter doesn't work well with Supabase
+	player_crops = []
+	for crop in response.data:
+		try:
+			if crop.get("plot_id", {}).get("house_id", {}).get("player_id") == player_id:
+				player_crops.append(crop)
+		except (TypeError, AttributeError):
+			continue
+
+	return player_crops
 
 
 def is_crop_ready(crop_id: int) -> bool:
