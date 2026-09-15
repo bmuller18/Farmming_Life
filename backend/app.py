@@ -1,0 +1,151 @@
+"""
+Farm RPG - REST API Backend
+"""
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from datetime import datetime
+
+from backend.services.player_service import get_player, get_player_by_name
+from backend.services.house_service import get_houses_by_player
+from backend.services.plot_service import get_plots_by_house
+from backend.services.crop_service import (
+    get_all_crop_types,
+    get_active_crop,
+    plant_crop_in_plot,
+    harvest_crop_from_plot,
+)
+
+app = Flask(__name__)
+CORS(app)
+
+# ============================================================================
+# PLAYER ENDPOINTS
+# ============================================================================
+
+@app.route("/api/player/<int:player_id>", methods=["GET"])
+def get_player_endpoint(player_id):
+    """Get player information."""
+    try:
+        player = get_player(player_id)
+        if not player:
+            return jsonify({"error": "Player not found"}), 404
+        return jsonify(player)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# HOUSE ENDPOINTS
+# ============================================================================
+
+@app.route("/api/player/<int:player_id>/houses", methods=["GET"])
+def get_player_houses(player_id):
+    """Get all houses owned by a player."""
+    try:
+        houses = get_houses_by_player(player_id)
+        return jsonify(houses)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# PLOT ENDPOINTS
+# ============================================================================
+
+@app.route("/api/house/<int:house_id>/plots", methods=["GET"])
+def get_house_plots(house_id):
+    """Get all plots in a house."""
+    try:
+        plots = get_plots_by_house(house_id)
+        return jsonify(plots)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# CROP TYPE ENDPOINTS
+# ============================================================================
+
+@app.route("/api/crop-types", methods=["GET"])
+def get_crop_types():
+    """Get all available crop types."""
+    try:
+        crop_types = get_all_crop_types()
+        return jsonify(crop_types)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# CROP ENDPOINTS
+# ============================================================================
+
+@app.route("/api/plot/<int:plot_id>/crop", methods=["GET"])
+def get_plot_crop(plot_id):
+    """Get active crop in a plot."""
+    try:
+        crop = get_active_crop(plot_id)
+        if not crop:
+            return jsonify({"crop": None})
+        return jsonify({"crop": crop})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/plot/<int:plot_id>/plant", methods=["POST"])
+def plant_crop(plot_id):
+    """Plant a crop in a plot."""
+    try:
+        data = request.get_json()
+        crop_type_id = data.get("crop_type_id")
+
+        if not crop_type_id:
+            return jsonify({"error": "crop_type_id is required"}), 400
+
+        crop = plant_crop_in_plot(plot_id, crop_type_id)
+        return jsonify(crop), 201
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/crop/<int:crop_id>/harvest", methods=["POST"])
+def harvest_crop(crop_id):
+    """Harvest a crop."""
+    try:
+        crop = harvest_crop_from_plot(crop_id)
+        return jsonify(crop)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({"status": "ok", "timestamp": datetime.utcnow().isoformat()})
+
+
+# ============================================================================
+# ERROR HANDLERS
+# ============================================================================
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Not found"}), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

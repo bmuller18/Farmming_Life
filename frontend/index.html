@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌾 Farming Life - RPG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-info h2 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .farms-section {
+            margin-bottom: 40px;
+        }
+
+        .farms-section h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .farm-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .farm-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .plots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .plot-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .plot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .plot-card.with-crop {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            border-color: #84fab0;
+        }
+
+        .plot-card.ready {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            border-color: #fa709a;
+        }
+
+        .plot-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+
+        .plot-status {
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .plot-crop {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        .crop-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .crop-item {
+            background: #f5f7fa;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .crop-item:hover {
+            background: #e8eef7;
+            transform: translateX(5px);
+        }
+
+        .crop-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .crop-info {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        button {
+            background-color: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #764ba2;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌾 Farming Life</h1>
+            <p>RPG de Simulación de Granjas</p>
+        </header>
+
+        <div id="player-section"></div>
+        <div id="farms-section"></div>
+        <div id="message"></div>
+    </div>
+
+    <!-- Modal para seleccionar cultivo -->
+    <div id="plantModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>🌱 Plantar cultivo</h2>
+            <p>Selecciona qué deseas plantar:</p>
+            <ul id="cropsList" class="crop-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:5000/api";
+        const PLAYER_ID = 2;
+
+        let currentPlotId = null;
+        let cropTypes = [];
+
+        // ============================================================================
+        // INICIALIZACIÓN
+        // ============================================================================
+
+        async function init() {
+            try {
+                await loadPlayer();
+                await loadCropTypes();
+                await loadFarms();
+            } catch (error) {
+                showMessage("Error al cargar la aplicación: " + error.message, "error");
+            }
+        }
+
+        // ============================================================================
+        // CARGAR DATOS
+        // ============================================================================
+
+        async function loadPlayer() {
+            const response = await fetch(`${API_BASE}/player/${PLAYER_ID}`);
+            if (!response.ok) throw new Error("No se pudo cargar el jugador");
+
+            const player = await response.json();
+
+            const html = `
+                <div class="player-info">
+                    <div>
+                        <h2>${player.name}</h2>
+                    </div>
+                    <div class="player-stats">
+                        <div class="stat">
+                            <span class="stat-label">Nivel</span>
+                            <span class="stat-value">${player.level}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Dinero</span>
+                            <span class="stat-value">$${player.money}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("player-section").innerHTML = html;
+        }
+
+        async function loadCropTypes() {
+            const response = await fetch(`${API_BASE}/crop-types`);
+            if (!response.ok) throw new Error("No se pudo cargar tipos de cultivos");
+            cropTypes = await response.json();
+        }
+
+        async function loadFarms() {
+            const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
+            if (!response.ok) throw new Error("No se pudo cargar las casas");
+
+            const houses = await response.json();
+
+            if (houses.length === 0) {
+                document.getElementById("farms-section").innerHTML = `
+                    <div class="farms-section">
+                        <h2>📍 Granjas</h2>
+                        <p style="color: white;">No tienes granjas aún.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let farmsHTML = '<div class="farms-section"><h2>📍 Mis Granjas</h2>';
+
+            for (const house of houses) {
+                const plotsResponse = await fetch(`${API_BASE}/house/${house.id}/plots`);
+                const plots = await plotsResponse.json();
+
+                farmsHTML += `<div class="farm-card">
+                    <h3>${house.name} (${plots.length} plots)</h3>
+                    <div class="plots-grid">`;
+
+                for (const plot of plots) {
+                    const cropResponse = await fetch(`${API_BASE}/plot/${plot.id}/crop`);
+                    const { crop } = await cropResponse.json();
+
+                    let plotHTML = `<div class="plot-card`;
+
+                    if (crop) {
+                        const cropType = crop.crop_types.name;
+                        const readyAt = new Date(crop.ready_at);
+                        const now = new Date();
+                        const isReady = now >= readyAt;
+
+                        if (isReady) {
+                            plotHTML += ` ready" onclick="harvestCrop(${crop.id})">
+                                <div class="plot-name">${plot.name}</div>
+                                <div class="plot-crop">🌾 ${cropType}</div>
+                                <div class="plot-status">¡Listo para cosechar!</div>`;
+                        } else {
+                            const timeLeft = Math.ceil((readyAt - now) / 60000);
+                            plotHTML += ` with-crop" onclick="showPlotInfo(${plot.id})">
+                                <div class="plot-name">${plot.name}</div>
+                                <div class="plot-crop">🌱 ${cropType}</div>
+                                <div class="plot-status">Creciendo... ${timeLeft}m</div>`;
+                        }
+                    } else {
+                        plotHTML += `" onclick="openPlantModal(${plot.id})">
+                            <div class="plot-name">${plot.name}</div>
+                            <div class="plot-status">Vacío</div>
+                            <div class="plot-status">Click para plantar</div>`;
+                    }
+
+                    plotHTML += `</div>`;
+                    farmsHTML += plotHTML;
+                }
+
+                farmsHTML += `</div></div>`;
+            }
+
+            farmsHTML += `</div>`;
+            document.getElementById("farms-section").innerHTML = farmsHTML;
+        }
+
+        // ============================================================================
+        // ACCIONES
+        // ============================================================================
+
+        function openPlantModal(plotId) {
+            currentPlotId = plotId;
+
+            const cropsListHTML = cropTypes.map(crop => `
+                <li class="crop-item" onclick="plantCrop(${crop.id})">
+                    <div class="crop-name">🌾 ${crop.name}</div>
+                    <div class="crop-info">⏱️ ${Math.floor(crop.growth_time / 60)} min · 📦 ${crop.base_yield} yield</div>
+                </li>
+            `).join("");
+
+            document.getElementById("cropsList").innerHTML = cropsListHTML;
+            document.getElementById("plantModal").style.display = "block";
+        }
+
+        async function plantCrop(cropTypeId) {
+            try {
+                const response = await fetch(`${API_BASE}/plot/${currentPlotId}/plant`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ crop_type_id: cropTypeId })
+                });
+
+                if (!response.ok) throw new Error("Error al plantar");
+
+                showMessage("✅ ¡Cultivo plantado!", "success");
+                document.getElementById("plantModal").style.display = "none";
+                setTimeout(loadFarms, 500);
+
+            } catch (error) {
+                showMessage("❌ Error: " + error.message, "error");
+            }
+        }
+
+        async function harvestCrop(cropId) {
+            try {
+                const response = await fetch(`${API_BASE}/crop/${cropId}/harvest`, {
+                    method: "POST"
+                });
+
+                if (!response.ok) throw new Error("Error al cosechar");
+
+                const crop = await response.json();
+                showMessage(`✅ ¡Cosechado! Ganaste ${crop.yield_amount} unidades`, "success");
+                setTimeout(loadFarms, 500);
+
+            } catch (error) {
+                showMessage("❌ Error: " + error.message, "error");
+            }
+        }
+
+        function showPlotInfo(plotId) {
+            showMessage("ℹ️ Cultivo en crecimiento. Vuelve en unos minutos.", "info");
+        }
+
+        // ============================================================================
+        // UI HELPERS
+        // ============================================================================
+
+        function showMessage(text, type = "info") {
+            const msgDiv = document.getElementById("message");
+            const className = type === "error" ? "error" : type === "success" ? "success" : "info";
+            msgDiv.innerHTML = `<div class="${className}">${text}</div>`;
+            setTimeout(() => msgDiv.innerHTML = "", 4000);
+        }
+
+        // Modal close handler
+        const modal = document.getElementById("plantModal");
+        const closeBtn = document.querySelector(".close-modal");
+
+        closeBtn.onclick = () => {
+            modal.style.display = "none";
+        };
+
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // ============================================================================
+        // START
+        // ============================================================================
+
+        init();
+    </script>
+</body>
+</html>
