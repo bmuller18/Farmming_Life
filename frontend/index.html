@@ -663,6 +663,7 @@
         let cropTypes = [];
         let prices = {};
         let currentPage = "dashboard";
+        let harvestingCrops = new Set(); // Track crops being harvested to prevent double-clicks
 
         // ════════════════════════════════════════════════════════════════
         // INICIALIZACIÓN
@@ -878,6 +879,10 @@
         // ════════════════════════════════════════════════════════════════
 
         async function harvestAndSell(cropId, cropName, yieldAmount, cropPrice) {
+            // Prevent double-clicking
+            if (harvestingCrops.has(cropId)) return;
+            harvestingCrops.add(cropId);
+
             try {
                 // 1. Primero cosechar
                 const harvestResponse = await fetch(`${API_BASE}/crop/${cropId}/harvest`, {
@@ -898,6 +903,8 @@
 
             } catch (error) {
                 showMessage("❌ " + error.message, "error");
+            } finally {
+                harvestingCrops.delete(cropId);
             }
         }
 
