@@ -1,6 +1,12 @@
 """
 Farm RPG - REST API Backend
 """
+import sys
+import os
+
+# Agregar la raíz del proyecto al path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime
@@ -118,8 +124,12 @@ def harvest_crop(crop_id):
         crop = harvest_crop_from_plot(crop_id)
         return jsonify(crop)
     except ValueError as e:
+        print(f"ValueError in harvest: {str(e)}")
         return jsonify({"error": str(e)}), 400
     except Exception as e:
+        print(f"Exception in harvest: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
