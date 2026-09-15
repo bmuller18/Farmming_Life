@@ -33,3 +33,25 @@ def get_houses_by_player(player_id: int):
     )
 
     return response.data
+
+
+def get_available_houses_for_purchase(player_id: int):
+    """Get houses available for purchase (not owned by this player)."""
+
+    supabase = get_supabase_client()
+
+    response = (
+        supabase
+        .table("houses")
+        .select("*")
+        .neq("player_id", player_id)
+        .order("price")
+        .execute()
+    )
+
+    return response.data
+
+
+def purchase_house(player_id: int, house_id: int):
+    """Purchase a house using the RPC function."""
+    return buy_house(player_id, house_id)

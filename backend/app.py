@@ -64,6 +64,37 @@ def get_player_houses(player_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/houses/available/<int:player_id>", methods=["GET"])
+def get_available_houses(player_id):
+    """Get houses available for purchase (not owned by player)."""
+    try:
+        from backend.services.house_service import get_available_houses_for_purchase
+        houses = get_available_houses_for_purchase(player_id)
+        return jsonify(houses)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/player/<int:player_id>/buy-house", methods=["POST"])
+def buy_house(player_id):
+    """Purchase a house."""
+    try:
+        data = request.get_json()
+        house_id = data.get("house_id")
+
+        if not house_id:
+            return jsonify({"error": "house_id is required"}), 400
+
+        from backend.services.house_service import purchase_house
+        result = purchase_house(player_id, house_id)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================================
 # PLOT ENDPOINTS
 # ============================================================================

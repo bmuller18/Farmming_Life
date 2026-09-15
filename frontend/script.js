@@ -211,6 +211,95 @@ async function loadInventory() {
     document.getElementById("farms-section").innerHTML = inventoryHTML;
 }
 
+async function loadProperties() {
+    try {
+        // Load player's houses
+        const playerHousesRes = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
+        const playerHouses = await playerHousesRes.json();
+
+        // Load available houses for purchase
+        const availableRes = await fetch(`${API_BASE}/houses/available/${PLAYER_ID}`);
+        const availableHouses = await availableRes.json();
+
+        let html = `<div class="section">
+            <div class="section-title">🏡 My Properties</div>`;
+
+        if (playerHouses.length > 0) {
+            html += `<div style="margin-bottom: 30px;">
+                <h3 style="font-size: 1.1em; font-weight: 600; color: var(--green-ag); margin-bottom: 12px;">Tus Casas</h3>
+                <div class="properties-grid">`;
+
+            playerHouses.forEach(house => {
+                html += `
+                    <div class="property-card owned">
+                        <div class="property-name">${house.name}</div>
+                        <div class="property-icon">🏠</div>
+                        <div class="property-plots">📍 ${house.plot_count} parcelas</div>
+                        <div class="property-price" style="color: var(--green-ag);">✓ Tuya</div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+        }
+
+        if (availableHouses.length > 0) {
+            html += `<h3 style="font-size: 1.1em; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Disponibles para Comprar</h3>
+                <div class="properties-grid">`;
+
+            availableHouses.forEach(house => {
+                const playerBalance = parseInt(document.getElementById("headerMoney").textContent.replace(/,/g, ''));
+                const canAfford = playerBalance >= house.price;
+
+                html += `
+                    <div class="property-card">
+                        <div class="property-name">${house.name}</div>
+                        <div class="property-icon">🏡</div>
+                        <div class="property-plots">📍 ${house.plot_count} parcelas</div>
+                        <div class="property-price">💰 $${house.price.toLocaleString()}</div>
+                        <button class="btn ${canAfford ? 'btn-buy' : 'btn-disabled'}"
+                                onclick="${canAfford ? `buyHouse(${house.id}, '${house.name}')` : ''}"
+                                ${!canAfford ? 'disabled' : ''}>
+                            ${canAfford ? 'Comprar' : 'Sin dinero'}
+                        </button>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        document.getElementById("farms-section").innerHTML = html;
+    } catch (error) {
+        console.error("Error loading properties:", error);
+        showMessage("❌ Error: " + error.message, "error");
+    }
+}
+
+async function buyHouse(houseId, houseName) {
+    try {
+        const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/buy-house`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ house_id: houseId })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error al comprar");
+        }
+
+        const result = await response.json();
+        showMessage(`✅ ¡${houseName} comprada! Tu nuevo balance: $${result.new_balance.toLocaleString()}`, "success");
+
+        await loadPlayer();
+        await loadProperties();
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
+}
+
 function updateBatchTotal(cropTypeId, cropPrice) {
     const itemId = `sell-${cropTypeId}`;
     const qtyInput = document.getElementById(`${itemId}-qty`);
@@ -482,6 +571,8 @@ async function setPage(page) {
             await loadFarms();
         } else if (page === "inventory") {
             await loadInventory();
+        } else if (page === "properties") {
+            await loadProperties();
         }
     } catch (error) {
         showMessage("❌ " + error.message, "error");
