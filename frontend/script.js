@@ -175,7 +175,7 @@ async function loadInventory() {
         const cropType = crop.crop_types.name;
         const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
         const totalYield = crop.total_yield;
-        const totalValue = totalYield * cropPrice;
+        const itemId = `sell-${crop.crop_type_id}`;
 
         inventoryHTML += `
             <div class="inventory-item">
@@ -183,12 +183,20 @@ async function loadInventory() {
                     <div class="item-name">${cropType}</div>
                     <div class="item-yield">x${totalYield}</div>
                 </div>
-                <div class="item-value">💰 $${totalValue.toLocaleString()}</div>
-                <div style="font-size: 0.85em; color: var(--text-secondary); margin: 6px 0;">
-                    ${totalYield} × $${cropPrice} = $${totalValue.toLocaleString()}
+                <div style="margin: 12px 0;">
+                    <label style="font-size: 0.8em; color: var(--text-secondary); display: block; margin-bottom: 6px;">
+                        Quantity:
+                    </label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="range" id="${itemId}-qty" min="1" max="${totalYield}" value="${totalYield}"
+                               style="flex: 1; cursor: pointer;"
+                               onchange="updateBatchTotal('${crop.crop_type_id}', ${cropPrice})">
+                        <span id="${itemId}-num" style="font-weight: 700; min-width: 30px; text-align: right;">${totalYield}</span>
+                    </div>
                 </div>
-                <button class="btn btn-sell" onclick="sellAllCrops('${crop.crop_type_id}', '${cropType}', ${totalYield}, ${cropPrice})" style="width: 100%; margin-top: 10px;">
-                    Sell All
+                <div class="item-value" id="${itemId}-total">💰 $${(totalYield * cropPrice).toLocaleString()}</div>
+                <button class="btn btn-sell" onclick="sellBatch('${crop.crop_type_id}', '${cropType}', ${cropPrice})" style="width: 100%; margin-top: 10px;">
+                    Sell <span id="${itemId}-btn-qty">${totalYield}</span>x
                 </button>
             </div>
         `;
@@ -196,6 +204,54 @@ async function loadInventory() {
 
     inventoryHTML += `</div></div>`;
     document.getElementById("farms-section").innerHTML = inventoryHTML;
+}
+
+function updateBatchTotal(cropTypeId, cropPrice) {
+    const itemId = `sell-${cropTypeId}`;
+    const qtyInput = document.getElementById(`${itemId}-qty`);
+    const qtyDisplay = document.getElementById(`${itemId}-num`);
+    const totalDisplay = document.getElementById(`${itemId}-total`);
+    const btnQty = document.getElementById(`${itemId}-btn-qty`);
+
+    if (qtyInput) {
+        const qty = parseInt(qtyInput.value) || 1;
+        const total = qty * cropPrice;
+        qtyDisplay.textContent = qty;
+        totalDisplay.textContent = `💰 $${total.toLocaleString()}`;
+        btnQty.textContent = qty;
+    }
+}
+
+async function sellBatch(cropTypeId, cropName, cropPrice) {
+    try {
+        const itemId = `sell-${cropTypeId}`;
+        const qtyInput = document.getElementById(`${itemId}-qty`);
+        const quantity = parseInt(qtyInput.value) || 1;
+
+        const response = await fetch(`${API_BASE}/crops/sell-batch`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                player_id: PLAYER_ID,
+                crop_type_id: cropTypeId,
+                quantity: quantity
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error al vender");
+        }
+
+        const result = await response.json();
+        showMessage(`✅ ¡Vendidos ${result.sold_count}x ${cropName}! +$${result.total_revenue} 💸`, "success");
+
+        await loadPlayer();
+        await loadInventory();
+    } catch (error) {
+        console.error("Batch sell error:", error);
+        showMessage(`❌ Error: ${error.message}`, "error");
+    }
 }
 
 async function sellAllCrops(cropTypeId, cropName, totalYield, cropPrice) {
