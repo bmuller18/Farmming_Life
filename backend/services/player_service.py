@@ -1,5 +1,4 @@
 from backend.repositories import player_repository
-from backend.repositories import plot_repository
 
 
 def get_player(player_id: int):
@@ -32,8 +31,5 @@ def create_new_player(name: str = "New Player"):
         money=100,
         level=1,
     )
-
-    # Create the 3 free starting plots
-    plot_repository.create_starting_plots(player["id"])
 
     return player

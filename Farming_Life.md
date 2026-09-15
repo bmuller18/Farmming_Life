@@ -13,7 +13,7 @@ Farming Life es un RPG agrícola multiplayer en el que los jugadores pueden adqu
 **Country Houses:** Designed  
 **Crops:** Partially Designed  
 **Crop Boosts:** Partially Designed  
-**Property Sales:** Future  
+**Property Sales:** Future
 **Rentals:** Future  
 **Jobs:** Future  
 **Multiplayer Interaction:** Future  
