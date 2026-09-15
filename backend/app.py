@@ -20,6 +20,14 @@ from backend.services.crop_service import (
     plant_crop_in_plot,
     harvest_crop_from_plot,
 )
+from backend.services.economy_service import (
+    get_seed_price,
+    get_crop_price,
+    buy_seeds,
+    sell_crops,
+    get_all_prices,
+    get_player_balance,
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -141,6 +149,86 @@ def harvest_crop(crop_id):
 def health_check():
     """Health check endpoint."""
     return jsonify({"status": "ok", "timestamp": datetime.utcnow().isoformat()})
+
+
+# ============================================================================
+# ECONOMY ENDPOINTS
+# ============================================================================
+
+@app.route("/api/prices", methods=["GET"])
+def get_prices():
+    """Get all crop prices."""
+    try:
+        prices = get_all_prices()
+        return jsonify(prices)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/crop-type/<int:crop_type_id>/price", methods=["GET"])
+def get_crop_type_price(crop_type_id):
+    """Get price for a specific crop type."""
+    try:
+        seed_price = get_seed_price(crop_type_id)
+        crop_price = get_crop_price(crop_type_id)
+        return jsonify({
+            "crop_type_id": crop_type_id,
+            "seed_price": seed_price,
+            "crop_price": crop_price
+        })
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/player/<int:player_id>/balance", methods=["GET"])
+def get_balance(player_id):
+    """Get player's current money balance."""
+    try:
+        balance = get_player_balance(player_id)
+        return jsonify({"player_id": player_id, "balance": balance})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/player/<int:player_id>/buy-seeds", methods=["POST"])
+def buy_seeds_endpoint(player_id):
+    """Buy seeds for planting."""
+    try:
+        data = request.get_json()
+        crop_type_id = data.get("crop_type_id")
+        quantity = data.get("quantity", 1)
+
+        if not crop_type_id:
+            return jsonify({"error": "crop_type_id is required"}), 400
+
+        result = buy_seeds(player_id, crop_type_id, quantity)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/crop/<int:crop_id>/sell", methods=["POST"])
+def sell_crop_endpoint(crop_id):
+    """Sell a harvested crop."""
+    try:
+        data = request.get_json()
+        player_id = data.get("player_id")
+
+        if not player_id:
+            return jsonify({"error": "player_id is required"}), 400
+
+        result = sell_crops(crop_id, player_id)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================================================================
