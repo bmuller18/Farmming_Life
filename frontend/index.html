@@ -300,6 +300,17 @@
             margin-top: 6px;
         }
 
+        .plot-time.countdown {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            font-weight: 800;
+            color: var(--blue-sky);
+            background: rgba(114, 175, 196, 0.1);
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
         .plot-price {
             font-size: 0.75em;
             color: var(--yellow-gold);
@@ -754,15 +765,18 @@
                                 </div>
                             `;
                         } else {
-                            const timeLeft = Math.ceil((readyAt - now) / 60000);
-                            const hours = Math.floor(timeLeft / 60);
-                            const mins = timeLeft % 60;
+                            const timeLeftMs = readyAt - now;
+                            const hours = Math.floor(timeLeftMs / 3600000);
+                            const minutes = Math.floor((timeLeftMs % 3600000) / 60000);
+                            const seconds = Math.floor((timeLeftMs % 60000) / 1000);
+                            const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
                             farmsHTML += `
-                                <div class="plot-card with-crop">
+                                <div class="plot-card with-crop" id="plot-${crop.id}">
                                     <div class="plot-name">${plot.name}</div>
                                     <div class="plot-emoji">🌱</div>
                                     <div class="plot-crop-name">${cropType}</div>
-                                    <div class="plot-time">${hours}h ${mins}m</div>
+                                    <div class="plot-time countdown" id="time-${crop.id}">${timeStr}</div>
                                 </div>
                             `;
                         }
@@ -951,6 +965,36 @@
             msgDiv.className = `message ${type} show`;
             setTimeout(() => msgDiv.classList.remove("show"), 3500);
         }
+
+        // ════════════════════════════════════════════════════════════════
+        // COUNTDOWN TIMER
+        // ════════════════════════════════════════════════════════════════
+
+        function updateCountdowns() {
+            const countdowns = document.querySelectorAll('.countdown');
+            countdowns.forEach(el => {
+                const id = el.id.replace('time-', '');
+                const currentText = el.textContent;
+                const parts = currentText.split(':').map(p => parseInt(p));
+
+                if (parts[0] === 0 && parts[1] === 0 && parts[2] === 0) {
+                    el.textContent = '00:00:00';
+                    return;
+                }
+
+                let totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                totalSeconds = Math.max(0, totalSeconds - 1);
+
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = totalSeconds % 60;
+
+                el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            });
+        }
+
+        // Actualizar countdown cada segundo
+        setInterval(updateCountdowns, 1000);
 
         // Modal close on outside click
         document.getElementById("plantModal").addEventListener("click", (e) => {
