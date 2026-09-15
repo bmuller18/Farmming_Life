@@ -12,7 +12,7 @@ def get_crops_by_plot(plot_id: int):
 		.table("crops")
 		.select("*, crop_types(*)")
 		.eq("plot_id", plot_id)
-		.order("planted_at", descending=True)
+		.order("planted_at", desc=True)
 		.execute()
 	)
 
@@ -30,7 +30,7 @@ def get_active_crop_by_plot(plot_id: int):
 		.select("*, crop_types(*)")
 		.eq("plot_id", plot_id)
 		.is_("harvested_at", "null")
-		.order("planted_at", descending=True)
+		.order("planted_at", desc=True)
 		.limit(1)
 		.execute()
 	)
