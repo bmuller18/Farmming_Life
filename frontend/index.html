@@ -940,11 +940,16 @@
 
                 const result = await response.json();
                 showMessage(`✅ ¡Vendido! +$${result.total_revenue} 💸`, "success");
+
+                // Reload data before closing modal
+                try {
+                    await loadPlayer();
+                    await loadFarms();
+                } catch (error) {
+                    console.error("Error reloading after sell:", error);
+                }
+
                 closeSellModal();
-                setTimeout(() => {
-                    loadPlayer();
-                    loadFarms();
-                }, 500);
 
             } catch (error) {
                 showMessage("❌ " + error.message, "error");
