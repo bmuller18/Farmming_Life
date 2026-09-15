@@ -249,7 +249,7 @@ async function sellBatch(cropTypeId, cropName, cropPrice) {
         }
 
         const result = await response.json();
-        showMessage(`✅ ¡Vendidos ${result.sold_count}x ${cropName}! +$${result.total_revenue} 💸`, "success");
+        showMessage(`✅ ¡Vendidos ${result.sold_yield} unidades de ${cropName}! +$${result.total_revenue} 💸`, "success");
 
         await loadPlayer();
         await loadInventory();
