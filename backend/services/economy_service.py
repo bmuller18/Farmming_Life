@@ -143,7 +143,6 @@ def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
 	# Sell crops by yield amount
 	total_revenue = quantity * crop_price
 	remaining_to_sell = quantity
-	crops_to_delete = []
 
 	for crop in harvested_crops:
 		if remaining_to_sell <= 0:
@@ -152,19 +151,15 @@ def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
 		yield_amount = crop.get("yield_amount", 0)
 
 		if yield_amount <= remaining_to_sell:
-			# Vender completamente este cultivo
+			# Vender completamente este cultivo (actualizar a 0, no eliminar)
 			remaining_to_sell -= yield_amount
-			crops_to_delete.append(crop["id"])
+			supabase.table("crops").update({"yield_amount": 0}).eq("id", crop["id"]).execute()
 		else:
 			# Vender solo parte y actualizar el cultivo
 			new_yield = yield_amount - remaining_to_sell
 			supabase.table("crops").update({"yield_amount": new_yield}).eq("id", crop["id"]).execute()
 			remaining_to_sell = 0
 			break
-
-	# Eliminar cultivos vendidos completamente
-	for crop_id in crops_to_delete:
-		supabase.table("crops").delete().eq("id", crop_id).execute()
 
 	# Add money to player
 	player = price_repository.update_player_money(player_id, total_revenue)
