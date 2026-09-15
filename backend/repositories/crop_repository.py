@@ -167,4 +167,8 @@ def is_crop_ready(crop_id: int) -> bool:
 	# Use naive UTC now for comparison (with 5 second tolerance)
 	now = datetime.utcnow()
 	tolerance = timedelta(seconds=5)
-	return now >= (ready_at - tolerance)
+	is_ready = now >= (ready_at - tolerance)
+
+	print(f"[CROP {crop_id}] ready_at={ready_at}, now={now}, is_ready={is_ready}, diff={now - ready_at}")
+
+	return is_ready
