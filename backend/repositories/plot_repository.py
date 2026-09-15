@@ -18,6 +18,37 @@ def get_plots_by_house(house_id: int):
     return response.data
 
 
+def get_plots_by_player(player_id: int):
+    """Get all plots belonging to a player (through houses)."""
+
+    supabase = get_supabase_client()
+
+    # First get all houses for this player
+    houses_response = (
+        supabase
+        .table("houses")
+        .select("id")
+        .eq("player_id", player_id)
+        .execute()
+    )
+
+    if not houses_response.data:
+        return []
+
+    house_ids = [h["id"] for h in houses_response.data]
+
+    # Then get all plots from those houses
+    plots_response = (
+        supabase
+        .table("plots")
+        .select("*")
+        .in_("house_id", house_ids)
+        .execute()
+    )
+
+    return plots_response.data
+
+
 def create_starting_plots(house_id: int):
     """Create the default number of plots for a house based on its plot_count."""
     supabase = get_supabase_client()

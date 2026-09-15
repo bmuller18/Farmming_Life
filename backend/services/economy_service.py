@@ -103,21 +103,29 @@ def get_player_balance(player_id: int):
 
 
 def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
-	"""Sell multiple harvested crops of the same type."""
+	"""Sell multiple harvested crops of the same type (by quantity of harvested crops, not yield)."""
 
 	from backend.supabase_client import get_supabase_client
 
 	supabase = get_supabase_client()
 
-	# Get harvested crops of this type for this player
-	from backend.repositories.crop_repository import get_harvested_crops_by_player
-	all_harvested = get_harvested_crops_by_player(player_id)
+	# Get all crops
+	crops_response = supabase.table("crops").select("*").execute()
 
-	# Filter to only the crops of this type
-	crops_to_sell = [c for c in all_harvested if c.get("crop_type_id") == crop_type_id]
+	# Filter: crops that belong to this player's plots and are harvested
+	from backend.repositories.plot_repository import get_plots_by_player
+	player_plots = get_plots_by_player(player_id)
+	plot_ids = [p["id"] for p in player_plots] if player_plots else []
 
-	if len(crops_to_sell) < quantity:
-		raise ValueError(f"Only {len(crops_to_sell)} crops available, requested {quantity}")
+	harvested_crops = [
+		c for c in crops_response.data
+		if c.get("plot_id") in plot_ids
+		and c.get("crop_type_id") == crop_type_id
+		and c.get("harvested_at") is not None
+	]
+
+	if len(harvested_crops) < quantity:
+		raise ValueError(f"Solo {len(harvested_crops)} cultivos disponibles, solicitaste {quantity}")
 
 	# Get crop price
 	crop_price = get_crop_price(crop_type_id)
@@ -126,13 +134,13 @@ def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
 	total_revenue = 0
 	sold_count = 0
 
-	for crop in crops_to_sell[:quantity]:
+	for crop in harvested_crops[:quantity]:
 		yield_amount = crop.get("yield_amount", 0)
 		revenue = yield_amount * crop_price
 		total_revenue += revenue
 		sold_count += 1
 
-		# Mark as sold by updating the crop (we'll just delete or mark it)
+		# Delete the crop
 		supabase.table("crops").delete().eq("id", crop["id"]).execute()
 
 	# Add money to player
