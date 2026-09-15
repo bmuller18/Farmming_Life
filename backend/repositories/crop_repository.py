@@ -146,8 +146,13 @@ def is_crop_ready(crop_id: int) -> bool:
 	if crop["harvested_at"]:
 		return False
 
-	# Check if ready_at has passed
+	# Check if ready_at has passed - compare as naive datetimes
 	ready_at_str = crop["ready_at"]
+	# Parse and remove timezone info
 	ready_at = datetime.fromisoformat(ready_at_str.replace("Z", "+00:00"))
-	now = datetime.now(timezone.utc)
+	if ready_at.tzinfo is not None:
+		ready_at = ready_at.replace(tzinfo=None)
+
+	# Use naive UTC now for comparison
+	now = datetime.utcnow()
 	return now >= ready_at
