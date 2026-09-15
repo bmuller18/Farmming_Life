@@ -34,11 +34,27 @@ def plant_crop_in_plot(plot_id: int, crop_type_id: int):
 def harvest_crop_from_plot(crop_id: int):
 	"""Harvest a crop if it's ready."""
 
-	# Check if crop is ready
-	if not crop_repository.is_crop_ready(crop_id):
-		raise ValueError("Crop is not ready to harvest yet")
+	# Get crop to verify it hasn't been harvested already
+	from backend.supabase_client import get_supabase_client
+	supabase = get_supabase_client()
 
-	# Harvest it
+	response = (
+		supabase
+		.table("crops")
+		.select("harvested_at")
+		.eq("id", crop_id)
+		.single()
+		.execute()
+	)
+
+	if not response.data:
+		raise ValueError(f"Crop {crop_id} not found")
+
+	crop_data = response.data
+	if crop_data["harvested_at"]:
+		raise ValueError("Crop has already been harvested")
+
+	# Harvest it (frontend already verified readiness with ready_at)
 	crop = crop_repository.harvest_crop(crop_id)
 
 	return crop
