@@ -133,7 +133,6 @@ def get_harvested_crops_by_player(player_id: int):
 			supabase
 			.table("crops")
 			.select("*, crop_types(*), plot_id(house_id(player_id))")
-			.not_("harvested_at", "is", None)
 			.order("harvested_at", desc=True)
 			.execute()
 		)
@@ -143,6 +142,10 @@ def get_harvested_crops_by_player(player_id: int):
 
 		player_crops = []
 		for crop in response.data:
+			# Filter: only harvested crops from this player
+			if crop.get("harvested_at") is None:
+				continue
+
 			plot = crop.get("plot_id")
 			if isinstance(plot, dict):
 				house = plot.get("house_id")
