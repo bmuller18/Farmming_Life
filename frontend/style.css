@@ -541,3 +541,50 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--green-dark);
 }
+
+/* INVENTORY */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 18px;
+}
+
+.inventory-item {
+    background: linear-gradient(135deg, #F5F8F6 0%, #EDF1ED 100%);
+    padding: 16px;
+    border-radius: 16px;
+    border-left: 4px solid var(--green-ag);
+    box-shadow: 3px 3px 8px var(--shadow-dark), inset -1px -1px 3px var(--shadow-light);
+    transition: var(--transition);
+}
+
+.inventory-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 6px 6px 12px rgba(111, 175, 120, 0.2), inset -1px -1px 3px var(--shadow-light);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1em;
+}
+
+.item-yield {
+    font-size: 0.85em;
+    color: var(--green-ag);
+    font-weight: 600;
+}
+
+.item-value {
+    font-size: 1.1em;
+    font-weight: 800;
+    color: var(--yellow-gold);
+    margin-bottom: 8px;
+}

@@ -149,6 +149,76 @@ async function loadFarms() {
     document.getElementById("farms-section").innerHTML = farmsHTML;
 }
 
+async function loadInventory() {
+    const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/inventory`);
+    if (!response.ok) throw new Error("No se pudo cargar inventario");
+
+    const crops = await response.json();
+
+    if (crops.length === 0) {
+        document.getElementById("farms-section").innerHTML = `
+            <div class="section">
+                <div class="section-title">🎒 Inventario</div>
+                <p style="color: var(--text-secondary);">No tienes cultivos cosechados aún.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let inventoryHTML = `
+        <div class="section">
+            <div class="section-title">🎒 Inventario (${crops.length})</div>
+            <div class="inventory-grid">
+    `;
+
+    crops.forEach(crop => {
+        const cropType = crop.crop_types.name;
+        const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
+        const totalValue = crop.yield_amount * cropPrice;
+
+        inventoryHTML += `
+            <div class="inventory-item">
+                <div class="item-header">
+                    <div class="item-name">${cropType}</div>
+                    <div class="item-yield">🌾 ${crop.yield_amount}</div>
+                </div>
+                <div class="item-value">💰 $${totalValue}</div>
+                <button class="btn btn-sell" onclick="sellInventoryCrop(${crop.id}, '${cropType}', ${crop.yield_amount}, ${cropPrice})" style="width: 100%; margin-top: 10px;">
+                    Sell
+                </button>
+            </div>
+        `;
+    });
+
+    inventoryHTML += `</div></div>`;
+    document.getElementById("farms-section").innerHTML = inventoryHTML;
+}
+
+async function sellInventoryCrop(cropId, cropName, yieldAmount, cropPrice) {
+    try {
+        const response = await fetch(`${API_BASE}/crop/${cropId}/sell`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ player_id: PLAYER_ID })
+        });
+
+        if (!response.ok) throw new Error("Error al vender");
+
+        const result = await response.json();
+        showMessage(`✅ ¡Vendido! +$${result.total_revenue} 💸`, "success");
+
+        try {
+            await loadPlayer();
+            await loadInventory();
+        } catch (error) {
+            console.error("Error reloading after sell:", error);
+        }
+
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
+}
+
 // ════════════════════════════════════════════════════════════════
 // ACCIONES - PLANTAR
 // ════════════════════════════════════════════════════════════════
@@ -315,6 +385,12 @@ function setPage(page) {
     };
 
     document.getElementById("pageTitle").textContent = titles[page];
+
+    if (page === "dashboard") {
+        loadFarms();
+    } else if (page === "inventory") {
+        loadInventory();
+    }
 }
 
 function showMessage(text, type = "info") {
