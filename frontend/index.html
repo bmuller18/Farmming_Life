@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌾 Farming Life - RPG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,283 +14,593 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-base: #DDE7DF;
+            --green-ag: #6FAF78;
+            --green-dark: #315C3C;
+            --yellow-gold: #F2C75C;
+            --orange-soft: #E99A5B;
+            --blue-sky: #72AFC4;
+            --pink-soft: #D98FA3;
+            --shadow-dark: rgba(110, 125, 115, 0.15);
+            --shadow-light: rgba(255, 255, 255, 0.8);
+            --text-primary: #315C3C;
+            --text-secondary: #5A6E63;
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
+            font-family: 'Nunito Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-base) 0%, #EBF0ED 100%);
+            color: var(--text-primary);
+            overflow: hidden;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .app-container {
+            display: flex;
+            height: 100vh;
         }
 
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* SIDEBAR */
+        /* ═══════════════════════════════════════════════════════════════ */
+
+        .sidebar {
+            width: 250px;
+            background: var(--bg-base);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -2px -2px 8px var(--shadow-light);
+            overflow-y: auto;
         }
 
-        h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-info {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+        .sidebar-logo {
+            font-size: 2em;
+            font-weight: 800;
+            color: var(--green-dark);
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            letter-spacing: -1px;
+        }
+
+        .player-card {
+            background: var(--bg-base);
+            padding: 16px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: inset 2px 2px 8px var(--shadow-dark), inset -2px -2px 8px var(--shadow-light), 4px 4px 12px var(--shadow-dark);
+            text-align: center;
+        }
+
+        .player-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--green-dark);
+            margin-bottom: 8px;
+        }
+
+        .player-level {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            list-style: none;
+            flex-grow: 1;
+            margin-bottom: 30px;
+        }
+
+        .nav-item {
+            margin-bottom: 12px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-base);
+            box-shadow: 4px 4px 10px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
+        }
+
+        .nav-link:hover {
+            color: var(--green-dark);
+            box-shadow: inset 2px 2px 6px var(--shadow-dark), inset -2px -2px 6px var(--shadow-light);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--green-ag) 0%, #5C9967 100%);
+            color: white;
+            box-shadow: 4px 4px 12px rgba(111, 175, 120, 0.3);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 1.2em;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* MAIN CONTENT */
+        /* ═══════════════════════════════════════════════════════════════ */
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* HEADER */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 30px;
+            background: var(--bg-base);
+            border-radius: 20px;
+            box-shadow: 6px 6px 14px var(--shadow-dark), -2px -2px 8px var(--shadow-light);
         }
 
-        .player-info h2 {
-            margin-bottom: 10px;
-            color: #667eea;
+        .header-title {
+            font-size: 2em;
+            font-weight: 800;
+            color: var(--green-dark);
+            letter-spacing: -0.5px;
         }
 
-        .player-stats {
+        .header-stats {
             display: flex;
             gap: 30px;
+            align-items: center;
         }
 
-        .stat {
+        .stat-box {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-base);
+            padding: 10px 16px;
+            border-radius: 14px;
+            box-shadow: inset 1px 1px 4px var(--shadow-dark), inset -1px -1px 4px var(--shadow-light);
         }
 
-        .stat-label {
-            font-size: 0.9em;
-            color: #666;
-            font-weight: 500;
+        .stat-icon {
+            font-size: 1.3em;
         }
 
         .stat-value {
+            font-size: 1.2em;
+            font-weight: 800;
+            color: var(--green-ag);
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* CONTENT AREA */
+        .content-area {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .section {
+            background: var(--bg-base);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 6px 6px 14px var(--shadow-dark), -2px -2px 8px var(--shadow-light);
+        }
+
+        .section-title {
             font-size: 1.5em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .farms-section {
-            margin-bottom: 40px;
-        }
-
-        .farms-section h2 {
-            color: white;
+            font-weight: 800;
+            color: var(--green-dark);
             margin-bottom: 20px;
-            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .farm-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .farm-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-
+        /* PLOTS GRID */
         .plots-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 18px;
         }
 
         .plot-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            padding: 15px;
+            background: linear-gradient(135deg, var(--bg-base) 0%, #E8F1EA 100%);
+            border-radius: 18px;
+            padding: 18px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 120px;
+            transition: var(--transition);
+            box-shadow: 6px 6px 14px var(--shadow-dark), -3px -3px 8px var(--shadow-light);
+            border: 2px solid transparent;
+            position: relative;
+            min-height: 150px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
         }
 
         .plot-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-6px);
+            box-shadow: 8px 8px 18px rgba(111, 175, 120, 0.2), -3px -3px 8px var(--shadow-light);
         }
 
         .plot-card.with-crop {
-            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
-            border-color: #84fab0;
+            background: linear-gradient(135deg, #C8E6D0 0%, #B8DEC5 100%);
+            border-color: var(--green-ag);
         }
 
         .plot-card.ready {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            border-color: #fa709a;
+            background: linear-gradient(135deg, #FFF4D6 0%, #FFE9B5 100%);
+            border-color: var(--yellow-gold);
+            box-shadow: 6px 6px 14px rgba(242, 199, 92, 0.25), -3px -3px 8px var(--shadow-light);
         }
 
         .plot-name {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 0.95em;
+            font-size: 0.9em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .plot-emoji {
+            font-size: 2.5em;
+            margin: 8px 0;
+        }
+
+        .plot-crop-name {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
         }
 
         .plot-status {
-            font-size: 0.85em;
-            color: #555;
-        }
-
-        .plot-crop {
-            font-size: 0.9em;
+            font-size: 0.75em;
+            color: var(--text-secondary);
             font-weight: 500;
-            color: #333;
-            margin-top: 5px;
         }
 
+        .plot-time {
+            font-size: 0.8em;
+            font-weight: 700;
+            color: var(--green-ag);
+            margin-top: 6px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Nunito Sans', sans-serif;
+            box-shadow: 4px 4px 10px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
+        }
+
+        .btn:active {
+            box-shadow: inset 2px 2px 6px var(--shadow-dark), inset -2px -2px 6px var(--shadow-light);
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--green-ag) 0%, #5C9967 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 6px 6px 14px rgba(111, 175, 120, 0.3), -2px -2px 8px var(--shadow-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-base);
+            color: var(--green-ag);
+            border: 2px solid var(--green-ag);
+        }
+
+        .btn-secondary:hover {
+            background: var(--green-ag);
+            color: white;
+        }
+
+        /* MODAL */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(49, 92, 60, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
         }
 
         .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 30px;
-            border: 1px solid #888;
-            border-radius: 10px;
+            background: var(--bg-base);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
             width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 12px 12px 24px var(--shadow-dark), -4px -4px 12px var(--shadow-light);
+            animation: modalSlideIn 0.3s ease-out;
         }
 
-        .modal-content h2 {
-            color: #667eea;
-            margin-bottom: 20px;
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        .close-modal {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: var(--green-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
             cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .close-modal:hover {
-            color: #000;
+        .modal-close:hover {
+            color: var(--green-dark);
         }
 
         .crop-list {
             list-style: none;
-            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
 
         .crop-item {
-            background: #f5f7fa;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 5px;
+            background: linear-gradient(135deg, #F5F8F6 0%, #EDF1ED 100%);
+            padding: 16px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border-left: 4px solid #667eea;
+            transition: var(--transition);
+            border-left: 4px solid var(--green-ag);
+            box-shadow: 3px 3px 8px var(--shadow-dark), inset -1px -1px 3px var(--shadow-light);
         }
 
         .crop-item:hover {
-            background: #e8eef7;
-            transform: translateX(5px);
+            background: linear-gradient(135deg, var(--green-ag) 0%, #5C9967 100%);
+            color: white;
+            border-left-color: white;
+            transform: translateX(4px);
+            box-shadow: 4px 4px 10px rgba(111, 175, 120, 0.25);
+        }
+
+        .crop-item:hover .crop-name,
+        .crop-item:hover .crop-info {
+            color: white;
         }
 
         .crop-name {
-            font-weight: bold;
-            color: #333;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-size: 1em;
         }
 
         .crop-info {
             font-size: 0.85em;
-            color: #666;
-            margin-top: 5px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 16px;
         }
 
+        /* MESSAGE */
+        .message {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            z-index: 999;
+            animation: slideInUp 0.3s ease-out;
+            box-shadow: 6px 6px 14px var(--shadow-dark);
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, var(--green-ag) 0%, #5C9967 100%);
+            color: white;
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, var(--orange-soft) 0%, #D97A48 100%);
+            color: white;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* LOADING */
         .loading {
             text-align: center;
-            color: white;
-            font-size: 1.2em;
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            padding: 40px;
         }
 
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
         }
 
-        button {
-            background-color: #667eea;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s ease;
+        ::-webkit-scrollbar-thumb {
+            background: var(--green-ag);
+            border-radius: 4px;
         }
 
-        button:hover {
-            background-color: #764ba2;
-        }
-
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--green-dark);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🌾 Farming Life</h1>
-            <p>RPG de Simulación de Granjas</p>
-        </header>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">🌾 Farming</div>
 
-        <div id="player-section"></div>
-        <div id="farms-section"></div>
-        <div id="message"></div>
+            <div class="player-card">
+                <div class="player-name" id="sidebarName">Muller</div>
+                <div class="player-level" id="sidebarLevel">Level 1</div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="setPage('dashboard')">
+                        <span class="nav-icon">📊</span>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="setPage('farm')">
+                        <span class="nav-icon">🌾</span>
+                        My Farm
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="setPage('properties')">
+                        <span class="nav-icon">🏡</span>
+                        Properties
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="setPage('market')">
+                        <span class="nav-icon">🛒</span>
+                        Market
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="setPage('inventory')">
+                        <span class="nav-icon">🎒</span>
+                        Inventory
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- HEADER -->
+            <div class="header">
+                <h1 class="header-title" id="pageTitle">Dashboard</h1>
+                <div class="header-stats">
+                    <div class="stat-box">
+                        <span class="stat-icon">💰</span>
+                        <div>
+                            <div class="stat-value" id="headerMoney">9,910</div>
+                            <div class="stat-label">Money</div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-icon">📈</span>
+                        <div>
+                            <div class="stat-value" id="headerLevel">1</div>
+                            <div class="stat-label">Level</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content-area">
+                <div id="farms-section"></div>
+            </div>
+        </main>
     </div>
 
-    <!-- Modal para seleccionar cultivo -->
+    <!-- MODAL -->
     <div id="plantModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>🌱 Plantar cultivo</h2>
-            <p>Selecciona qué deseas plantar:</p>
+            <div class="modal-header">
+                <h2 class="modal-title">🌱 Choose a Crop</h2>
+                <button class="modal-close" onclick="closePlantModal()">✕</button>
+            </div>
             <ul id="cropsList" class="crop-list"></ul>
         </div>
     </div>
+
+    <!-- MESSAGE -->
+    <div id="message" class="message"></div>
 
     <script>
         const API_BASE = "http://localhost:5000/api";
@@ -295,10 +608,11 @@
 
         let currentPlotId = null;
         let cropTypes = [];
+        let currentPage = "dashboard";
 
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
         // INICIALIZACIÓN
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
 
         async function init() {
             try {
@@ -306,39 +620,23 @@
                 await loadCropTypes();
                 await loadFarms();
             } catch (error) {
-                showMessage("Error al cargar la aplicación: " + error.message, "error");
+                showMessage("Error: " + error.message, "error");
             }
         }
 
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
         // CARGAR DATOS
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
 
         async function loadPlayer() {
             const response = await fetch(`${API_BASE}/player/${PLAYER_ID}`);
             if (!response.ok) throw new Error("No se pudo cargar el jugador");
 
             const player = await response.json();
-
-            const html = `
-                <div class="player-info">
-                    <div>
-                        <h2>${player.name}</h2>
-                    </div>
-                    <div class="player-stats">
-                        <div class="stat">
-                            <span class="stat-label">Nivel</span>
-                            <span class="stat-value">${player.level}</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-label">Dinero</span>
-                            <span class="stat-value">$${player.money}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById("player-section").innerHTML = html;
+            document.getElementById("sidebarName").textContent = player.name;
+            document.getElementById("sidebarLevel").textContent = `Level ${player.level}`;
+            document.getElementById("headerMoney").textContent = player.money.toLocaleString();
+            document.getElementById("headerLevel").textContent = player.level;
         }
 
         async function loadCropTypes() {
@@ -355,29 +653,29 @@
 
             if (houses.length === 0) {
                 document.getElementById("farms-section").innerHTML = `
-                    <div class="farms-section">
-                        <h2>📍 Granjas</h2>
-                        <p style="color: white;">No tienes granjas aún.</p>
+                    <div class="section">
+                        <div class="section-title">🌾 My Farms</div>
+                        <p style="color: var(--text-secondary);">No tienes granjas aún.</p>
                     </div>
                 `;
                 return;
             }
 
-            let farmsHTML = '<div class="farms-section"><h2>📍 Mis Granjas</h2>';
+            let farmsHTML = '';
 
             for (const house of houses) {
                 const plotsResponse = await fetch(`${API_BASE}/house/${house.id}/plots`);
                 const plots = await plotsResponse.json();
 
-                farmsHTML += `<div class="farm-card">
-                    <h3>${house.name} (${plots.length} plots)</h3>
-                    <div class="plots-grid">`;
+                farmsHTML += `
+                    <div class="section">
+                        <div class="section-title">🌾 ${house.name}</div>
+                        <div class="plots-grid">
+                `;
 
                 for (const plot of plots) {
                     const cropResponse = await fetch(`${API_BASE}/plot/${plot.id}/crop`);
                     const { crop } = await cropResponse.json();
-
-                    let plotHTML = `<div class="plot-card`;
 
                     if (crop) {
                         const cropType = crop.crop_types.name;
@@ -386,38 +684,47 @@
                         const isReady = now >= readyAt;
 
                         if (isReady) {
-                            plotHTML += ` ready" onclick="harvestCrop(${crop.id})">
-                                <div class="plot-name">${plot.name}</div>
-                                <div class="plot-crop">🌾 ${cropType}</div>
-                                <div class="plot-status">¡Listo para cosechar!</div>`;
+                            farmsHTML += `
+                                <div class="plot-card ready" onclick="harvestCrop(${crop.id})">
+                                    <div class="plot-name">${plot.name}</div>
+                                    <div class="plot-emoji">🌾</div>
+                                    <div class="plot-crop-name">${cropType}</div>
+                                    <div class="plot-status">✨ Ready!</div>
+                                </div>
+                            `;
                         } else {
                             const timeLeft = Math.ceil((readyAt - now) / 60000);
-                            plotHTML += ` with-crop" onclick="showPlotInfo(${plot.id})">
-                                <div class="plot-name">${plot.name}</div>
-                                <div class="plot-crop">🌱 ${cropType}</div>
-                                <div class="plot-status">Creciendo... ${timeLeft}m</div>`;
+                            const hours = Math.floor(timeLeft / 60);
+                            const mins = timeLeft % 60;
+                            farmsHTML += `
+                                <div class="plot-card with-crop">
+                                    <div class="plot-name">${plot.name}</div>
+                                    <div class="plot-emoji">🌱</div>
+                                    <div class="plot-crop-name">${cropType}</div>
+                                    <div class="plot-time">${hours}h ${mins}m</div>
+                                </div>
+                            `;
                         }
                     } else {
-                        plotHTML += `" onclick="openPlantModal(${plot.id})">
-                            <div class="plot-name">${plot.name}</div>
-                            <div class="plot-status">Vacío</div>
-                            <div class="plot-status">Click para plantar</div>`;
+                        farmsHTML += `
+                            <div class="plot-card" onclick="openPlantModal(${plot.id})">
+                                <div class="plot-name">${plot.name}</div>
+                                <div class="plot-emoji">🌱</div>
+                                <div class="plot-status">Click to plant</div>
+                            </div>
+                        `;
                     }
-
-                    plotHTML += `</div>`;
-                    farmsHTML += plotHTML;
                 }
 
                 farmsHTML += `</div></div>`;
             }
 
-            farmsHTML += `</div>`;
             document.getElementById("farms-section").innerHTML = farmsHTML;
         }
 
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
         // ACCIONES
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
 
         function openPlantModal(plotId) {
             currentPlotId = plotId;
@@ -425,12 +732,19 @@
             const cropsListHTML = cropTypes.map(crop => `
                 <li class="crop-item" onclick="plantCrop(${crop.id})">
                     <div class="crop-name">🌾 ${crop.name}</div>
-                    <div class="crop-info">⏱️ ${Math.floor(crop.growth_time / 60)} min · 📦 ${crop.base_yield} yield</div>
+                    <div class="crop-info">
+                        <span>⏱️ ${Math.floor(crop.growth_time / 60)}m</span>
+                        <span>📦 ${crop.base_yield} yield</span>
+                    </div>
                 </li>
             `).join("");
 
             document.getElementById("cropsList").innerHTML = cropsListHTML;
-            document.getElementById("plantModal").style.display = "block";
+            document.getElementById("plantModal").classList.add("active");
+        }
+
+        function closePlantModal() {
+            document.getElementById("plantModal").classList.remove("active");
         }
 
         async function plantCrop(cropTypeId) {
@@ -444,11 +758,11 @@
                 if (!response.ok) throw new Error("Error al plantar");
 
                 showMessage("✅ ¡Cultivo plantado!", "success");
-                document.getElementById("plantModal").style.display = "none";
+                closePlantModal();
                 setTimeout(loadFarms, 500);
 
             } catch (error) {
-                showMessage("❌ Error: " + error.message, "error");
+                showMessage("❌ " + error.message, "error");
             }
         }
 
@@ -461,46 +775,50 @@
                 if (!response.ok) throw new Error("Error al cosechar");
 
                 const crop = await response.json();
-                showMessage(`✅ ¡Cosechado! Ganaste ${crop.yield_amount} unidades`, "success");
-                setTimeout(loadFarms, 500);
+                showMessage(`✅ ¡Cosechado! +${crop.yield_amount} 🌾`, "success");
+                setTimeout(() => {
+                    loadPlayer();
+                    loadFarms();
+                }, 500);
 
             } catch (error) {
-                showMessage("❌ Error: " + error.message, "error");
+                showMessage("❌ " + error.message, "error");
             }
         }
 
-        function showPlotInfo(plotId) {
-            showMessage("ℹ️ Cultivo en crecimiento. Vuelve en unos minutos.", "info");
-        }
+        function setPage(page) {
+            currentPage = page;
+            document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
+            event.target.closest(".nav-link").classList.add("active");
 
-        // ============================================================================
-        // UI HELPERS
-        // ============================================================================
+            const titles = {
+                dashboard: "Dashboard",
+                farm: "My Farm",
+                properties: "Properties",
+                market: "Market",
+                inventory: "Inventory"
+            };
+
+            document.getElementById("pageTitle").textContent = titles[page];
+        }
 
         function showMessage(text, type = "info") {
             const msgDiv = document.getElementById("message");
-            const className = type === "error" ? "error" : type === "success" ? "success" : "info";
-            msgDiv.innerHTML = `<div class="${className}">${text}</div>`;
-            setTimeout(() => msgDiv.innerHTML = "", 4000);
+            msgDiv.textContent = text;
+            msgDiv.className = `message ${type} show`;
+            setTimeout(() => msgDiv.classList.remove("show"), 3500);
         }
 
-        // Modal close handler
-        const modal = document.getElementById("plantModal");
-        const closeBtn = document.querySelector(".close-modal");
-
-        closeBtn.onclick = () => {
-            modal.style.display = "none";
-        };
-
-        window.onclick = (event) => {
-            if (event.target === modal) {
-                modal.style.display = "none";
+        // Modal close on outside click
+        document.getElementById("plantModal").addEventListener("click", (e) => {
+            if (e.target.id === "plantModal") {
+                closePlantModal();
             }
-        };
+        });
 
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
         // START
-        // ============================================================================
+        // ════════════════════════════════════════════════════════════════
 
         init();
     </script>
