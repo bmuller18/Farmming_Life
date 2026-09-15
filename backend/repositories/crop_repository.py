@@ -128,46 +128,61 @@ def get_harvested_crops_by_player(player_id: int):
 
 	supabase = get_supabase_client()
 
-	# Get all houses for the player
-	houses_response = (
-		supabase
-		.table("houses")
-		.select("id")
-		.eq("player_id", player_id)
-		.execute()
-	)
+	try:
+		# Get all houses for the player
+		houses_response = (
+			supabase
+			.table("houses")
+			.select("id")
+			.eq("player_id", player_id)
+			.execute()
+		)
 
-	if not houses_response.data:
+		if not houses_response.data:
+			return []
+
+		house_ids = [house["id"] for house in houses_response.data]
+
+		# Get all plots for those houses
+		plots_response = (
+			supabase
+			.table("plots")
+			.select("id")
+		)
+
+		for house_id in house_ids:
+			plots_response = plots_response.or_(f"house_id.eq.{house_id}")
+
+		plots_response = plots_response.execute()
+
+		if not plots_response.data:
+			return []
+
+		plot_ids = [plot["id"] for plot in plots_response.data]
+
+		# Get harvested crops for those plots
+		crops_response = (
+			supabase
+			.table("crops")
+			.select("*, crop_types(*)")
+		)
+
+		for plot_id in plot_ids:
+			crops_response = crops_response.or_(f"plot_id.eq.{plot_id}")
+
+		crops_response = (
+			crops_response
+			.not_("harvested_at", "is", None)
+			.order("harvested_at", desc=True)
+			.execute()
+		)
+
+		return crops_response.data
+	except Exception as e:
+		print(f"[INVENTORY ERROR] {str(e)}")
+		import traceback
+		traceback.print_exc()
 		return []
-
-	house_ids = [house["id"] for house in houses_response.data]
-
-	# Get all plots for those houses
-	plots_response = (
-		supabase
-		.table("plots")
-		.select("id")
-		.in_("house_id", house_ids)
-		.execute()
-	)
-
-	if not plots_response.data:
-		return []
-
-	plot_ids = [plot["id"] for plot in plots_response.data]
-
-	# Get harvested crops for those plots
-	crops_response = (
-		supabase
-		.table("crops")
-		.select("*, crop_types(*)")
-		.in_("plot_id", plot_ids)
-		.not_("harvested_at", "is", None)
-		.order("harvested_at", desc=True)
-		.execute()
-	)
-
-	return crops_response.data
 
 
 def is_crop_ready(crop_id: int) -> bool:
