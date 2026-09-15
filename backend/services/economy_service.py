@@ -117,12 +117,15 @@ def sell_crops_batch(player_id: int, crop_type_id: int, quantity: int):
 	player_plots = get_plots_by_player(player_id)
 	plot_ids = [p["id"] for p in player_plots] if player_plots else []
 
-	harvested_crops = [
-		c for c in crops_response.data
-		if c.get("plot_id") in plot_ids
-		and c.get("crop_type_id") == crop_type_id
-		and c.get("harvested_at") is not None
-	]
+	# Filter: crops that fulfill all criteria
+	harvested_crops = []
+	for c in crops_response.data:
+		plot_id = c.get("plot_id")
+		type_id = c.get("crop_type_id")
+		harvested = c.get("harvested_at")
+
+		if plot_id and plot_id in plot_ids and type_id == crop_type_id and harvested:
+			harvested_crops.append(c)
 
 	if len(harvested_crops) < quantity:
 		raise ValueError(f"Solo {len(harvested_crops)} cultivos disponibles, solicitaste {quantity}")
