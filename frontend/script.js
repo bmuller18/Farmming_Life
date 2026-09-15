@@ -105,11 +105,16 @@ async function loadFarms() {
                 const isReady = now >= readyAt;
 
                 if (isReady) {
+                    const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
+                    const totalValue = crop.yield_amount * cropPrice;
+
                     farmsHTML += `
                         <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${crop.yield_amount})">
                             <div class="plot-name">${plot.name}</div>
                             <div class="plot-emoji">🌾</div>
                             <div class="plot-crop-name">${cropType}</div>
+                            <div class="plot-yield">📦 ${crop.yield_amount} unidades</div>
+                            <div class="plot-value">💰 $${totalValue}</div>
                             <div class="plot-status">✨ Ready to Harvest!</div>
                         </div>
                     `;
