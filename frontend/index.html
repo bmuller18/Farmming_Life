@@ -714,6 +714,15 @@
             cropTypes = await response.json();
         }
 
+        // Helper: Parse timestamp as UTC
+        function parseUTCDate(dateString) {
+            // Ensure Z suffix for UTC interpretation
+            if (!dateString.includes('Z') && !dateString.includes('+')) {
+                dateString += 'Z';
+            }
+            return new Date(dateString);
+        }
+
         async function loadFarms() {
             const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
             if (!response.ok) throw new Error("No se pudo cargar las casas");
@@ -748,7 +757,7 @@
 
                     if (crop) {
                         const cropType = crop.crop_types.name;
-                        const readyAt = new Date(crop.ready_at);
+                        const readyAt = parseUTCDate(crop.ready_at);
                         const now = new Date();
                         const isReady = now >= readyAt;
 
