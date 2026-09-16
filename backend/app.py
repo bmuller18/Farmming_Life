@@ -13,6 +13,7 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from backend.middleware import require_auth, require_player_match
+from backend.middleware.rate_limit import create_limiter, setup_rate_limit_error_handler
 from backend.schemas import (
     RegisterRequest, LoginRequest, BuyHouseRequest, PlantCropRequest,
     BuySeedsRequest, SellCropsRequest, SellSingleCropRequest
@@ -40,11 +41,16 @@ from backend.services.economy_service import (
 app = Flask(__name__)
 CORS(app)
 
+# Configurar Rate Limiting
+limiter = create_limiter(app)
+setup_rate_limit_error_handler(app)
+
 # ============================================================================
 # AUTH ENDPOINTS
 # ============================================================================
 
 @app.route("/api/auth/register", methods=["POST"])
+@limiter.limit("3 per minute")
 def register():
     """Register a new player."""
     try:
@@ -67,6 +73,7 @@ def register():
 
 
 @app.route("/api/auth/login", methods=["POST"])
+@limiter.limit("5 per minute")
 def login():
     """Login a player."""
     try:
@@ -133,6 +140,7 @@ def get_available_houses(player_id):
 
 
 @app.route("/api/player/<int:player_id>/buy-house", methods=["POST"])
+@limiter.limit("10 per hour")
 @require_player_match
 def buy_house(player_id):
     """Purchase a house."""
@@ -249,6 +257,7 @@ def get_inventory(player_id):
 
 
 @app.route("/api/crops/sell-batch", methods=["POST"])
+@limiter.limit("30 per hour")
 @require_auth
 def sell_batch():
     """Sell multiple crops of the same type at once."""
@@ -327,6 +336,7 @@ def get_balance(player_id):
 
 
 @app.route("/api/player/<int:player_id>/buy-seeds", methods=["POST"])
+@limiter.limit("30 per hour")
 @require_player_match
 def buy_seeds_endpoint(player_id):
     """Buy seeds for planting."""
@@ -349,6 +359,7 @@ def buy_seeds_endpoint(player_id):
 
 
 @app.route("/api/crop/<int:crop_id>/sell", methods=["POST"])
+@limiter.limit("30 per hour")
 @require_auth
 def sell_crop_endpoint(crop_id):
     """Sell a harvested crop."""
