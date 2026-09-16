@@ -28,10 +28,18 @@ function setPlayerId(playerId) {
 // Fetch con JWT automático + validación de autenticación
 async function fetchWithAuth(url, options = {}) {
     const token = getToken();
-    const headers = { "Content-Type": "application/json", ...options.headers };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const headers = {
+        "Content-Type": "application/json",
+        ...options.headers,
+        ...(token && { "Authorization": `Bearer ${token}` })
+    };
 
-    const response = await fetch(url, { ...options, headers });
+    const fetchOptions = { ...options };
+    delete fetchOptions.headers;  // Quitar headers de options para evitar duplicado
+
+    console.log("[fetchWithAuth]", url, "| Token:", token ? "SÍ" : "NO", "| Headers:", headers);
+
+    const response = await fetch(url, { ...fetchOptions, headers });
 
     // Si token expiró (401), logout automáticamente
     if (response.status === 401) {
