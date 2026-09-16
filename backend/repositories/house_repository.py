@@ -31,7 +31,7 @@ def buy_house(player_id: int, house_id: int):
     # Get player's current money
     player_response = (
         supabase
-        .table("players")
+        .table("player")
         .select("money")
         .eq("id", player_id)
         .single()

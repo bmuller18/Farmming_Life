@@ -705,3 +705,118 @@ body {
     width: 100%;
     opacity: 0.6;
 }
+
+/* LOGIN MODAL */
+.login-modal {
+    max-width: 400px;
+    width: 90%;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h1 {
+    font-size: 2.5em;
+    color: var(--green-ag);
+    margin-bottom: 8px;
+}
+
+.login-header p {
+    color: var(--text-secondary);
+    font-size: 0.95em;
+}
+
+.login-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--shadow-dark);
+}
+
+.login-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+
+.login-tab.active {
+    color: var(--green-ag);
+    border-bottom-color: var(--green-ag);
+}
+
+.login-form {
+    display: none;
+}
+
+.login-form.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    font-size: 0.9em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--shadow-dark);
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-family: inherit;
+    transition: var(--transition);
+    background: linear-gradient(135deg, var(--bg-base) 0%, #F5F5F5 100%);
+    color: var(--text-primary);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--green-ag);
+    box-shadow: 0 0 0 3px rgba(111, 175, 120, 0.1);
+}
+
+.form-error {
+    color: #d32f2f;
+    font-size: 0.85em;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--green-ag) 0%, #5A9C6D 100%);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1em;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 12px rgba(111, 175, 120, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}

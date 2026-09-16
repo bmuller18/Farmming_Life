@@ -1,12 +1,118 @@
 const API_BASE = "http://localhost:5000/api";
-const PLAYER_ID = 2;
 
+let PLAYER_ID = null;
 let currentPlotId = null;
 let currentCropId = null;
 let cropTypes = [];
 let prices = {};
 let currentPage = "dashboard";
 let harvestingCrops = new Set();
+
+// ════════════════════════════════════════════════════════════════
+// AUTENTICACIÓN
+// ════════════════════════════════════════════════════════════════
+
+function getToken() {
+    return localStorage.getItem("auth_token");
+}
+
+function setToken(token) {
+    localStorage.setItem("auth_token", token);
+}
+
+function setPlayerId(playerId) {
+    PLAYER_ID = playerId;
+    localStorage.setItem("player_id", playerId);
+}
+
+function getPlayerId() {
+    return localStorage.getItem("player_id");
+}
+
+function logout() {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("player_id");
+    PLAYER_ID = null;
+    location.reload();
+}
+
+function switchLoginTab(tab) {
+    document.querySelectorAll(".login-tab").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".login-form").forEach(el => el.classList.remove("active"));
+
+    if (tab === "login") {
+        document.querySelector(".login-tab:nth-child(1)").classList.add("active");
+        document.getElementById("loginForm").classList.add("active");
+    } else {
+        document.querySelector(".login-tab:nth-child(2)").classList.add("active");
+        document.getElementById("registerForm").classList.add("active");
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            document.getElementById("loginError").textContent = error.error;
+            return;
+        }
+
+        const result = await response.json();
+        setToken(result.token);
+        setPlayerId(result.player_id);
+        document.getElementById("loginModal").classList.remove("active");
+
+        await init();
+    } catch (error) {
+        document.getElementById("loginError").textContent = "Error al conectar";
+    }
+}
+
+async function handleRegister(event) {
+    event.preventDefault();
+    const name = document.getElementById("registerName").value;
+    const email = document.getElementById("registerEmail").value;
+    const password = document.getElementById("registerPassword").value;
+    const confirm = document.getElementById("registerConfirm").value;
+
+    if (password !== confirm) {
+        document.getElementById("registerError").textContent = "Las contraseñas no coinciden";
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, name, password })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            document.getElementById("registerError").textContent = error.error;
+            return;
+        }
+
+        const result = await response.json();
+        setToken(result.token);
+        setPlayerId(result.player_id);
+        document.getElementById("loginModal").classList.remove("active");
+
+        await init();
+    } catch (error) {
+        document.getElementById("registerError").textContent = "Error al registrarse";
+    }
+}
 
 // ════════════════════════════════════════════════════════════════
 // INICIALIZACIÓN
@@ -22,6 +128,20 @@ async function init() {
         showMessage("Error: " + error.message, "error");
     }
 }
+
+// Check if user is logged in
+window.addEventListener("DOMContentLoaded", () => {
+    const token = getToken();
+    const playerId = getPlayerId();
+
+    if (token && playerId) {
+        PLAYER_ID = parseInt(playerId);
+        document.getElementById("loginModal").classList.remove("active");
+        init();
+    } else {
+        document.getElementById("loginModal").classList.add("active");
+    }
+});
 
 // ════════════════════════════════════════════════════════════════
 // CARGAR DATOS

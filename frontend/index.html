@@ -87,6 +87,57 @@
         </main>
     </div>
 
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="modal active">
+        <div class="modal-content login-modal">
+            <div class="login-header">
+                <h1>🌾 Farming Life</h1>
+                <p>Bienvenido al juego de agricultura</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchLoginTab('login')">Iniciar Sesión</button>
+                <button class="login-tab" onclick="switchLoginTab('register')">Registrarse</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" class="login-form active" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                <div id="loginError" class="form-error"></div>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" class="login-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Nombre de Jugador</label>
+                    <input type="text" id="registerName" placeholder="Tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="registerPassword" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <input type="password" id="registerConfirm" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Registrarse</button>
+                <div id="registerError" class="form-error"></div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL PLANTAR -->
     <div id="plantModal" class="modal">
         <div class="modal-content">

@@ -35,6 +35,53 @@ app = Flask(__name__)
 CORS(app)
 
 # ============================================================================
+# AUTH ENDPOINTS
+# ============================================================================
+
+@app.route("/api/auth/register", methods=["POST"])
+def register():
+    """Register a new player."""
+    try:
+        from backend.services.auth_service import register_player
+        data = request.get_json()
+        email = data.get("email")
+        name = data.get("name")
+        password = data.get("password")
+
+        if not email or not name or not password:
+            return jsonify({"error": "email, name, and password are required"}), 400
+
+        result = register_player(email, name, password)
+        return jsonify(result), 201
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def login():
+    """Login a player."""
+    try:
+        from backend.services.auth_service import login_player
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"error": "email and password are required"}), 400
+
+        result = login_player(email, password)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
 # PLAYER ENDPOINTS
 # ============================================================================
 
