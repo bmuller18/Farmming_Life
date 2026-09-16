@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime
 
+from backend.middleware import require_auth, require_player_match
 from backend.services.player_service import get_player, get_player_by_name
 from backend.services.house_service import get_houses_by_player
 from backend.services.plot_service import get_plots_by_house
@@ -86,6 +87,7 @@ def login():
 # ============================================================================
 
 @app.route("/api/player/<int:player_id>", methods=["GET"])
+@require_player_match
 def get_player_endpoint(player_id):
     """Get player information."""
     try:
@@ -102,6 +104,7 @@ def get_player_endpoint(player_id):
 # ============================================================================
 
 @app.route("/api/player/<int:player_id>/houses", methods=["GET"])
+@require_player_match
 def get_player_houses(player_id):
     """Get all houses owned by a player."""
     try:
@@ -112,6 +115,7 @@ def get_player_houses(player_id):
 
 
 @app.route("/api/houses/available/<int:player_id>", methods=["GET"])
+@require_player_match
 def get_available_houses(player_id):
     """Get houses available for purchase (not owned by player)."""
     try:
@@ -123,6 +127,7 @@ def get_available_houses(player_id):
 
 
 @app.route("/api/player/<int:player_id>/buy-house", methods=["POST"])
+@require_player_match
 def buy_house(player_id):
     """Purchase a house."""
     try:
@@ -222,6 +227,7 @@ def harvest_crop(crop_id):
 
 
 @app.route("/api/player/<int:player_id>/inventory", methods=["GET"])
+@require_player_match
 def get_inventory(player_id):
     """Get player's harvested crops (inventory)."""
     try:
@@ -232,6 +238,7 @@ def get_inventory(player_id):
 
 
 @app.route("/api/crops/sell-batch", methods=["POST"])
+@require_auth
 def sell_batch():
     """Sell multiple crops of the same type at once."""
     try:
@@ -239,6 +246,10 @@ def sell_batch():
         player_id = data.get("player_id")
         crop_type_id = data.get("crop_type_id")
         quantity = data.get("quantity", 1)
+
+        # Validar que player_id coincida con el token
+        if player_id != request.player_id:
+            return jsonify({"error": "Unauthorized: Cannot sell for other player"}), 403
 
         if not player_id or not crop_type_id:
             return jsonify({"error": "player_id and crop_type_id required"}), 400
@@ -294,6 +305,7 @@ def get_crop_type_price(crop_type_id):
 
 
 @app.route("/api/player/<int:player_id>/balance", methods=["GET"])
+@require_player_match
 def get_balance(player_id):
     """Get player's current money balance."""
     try:
@@ -304,6 +316,7 @@ def get_balance(player_id):
 
 
 @app.route("/api/player/<int:player_id>/buy-seeds", methods=["POST"])
+@require_player_match
 def buy_seeds_endpoint(player_id):
     """Buy seeds for planting."""
     try:
@@ -324,11 +337,16 @@ def buy_seeds_endpoint(player_id):
 
 
 @app.route("/api/crop/<int:crop_id>/sell", methods=["POST"])
+@require_auth
 def sell_crop_endpoint(crop_id):
     """Sell a harvested crop."""
     try:
         data = request.get_json()
         player_id = data.get("player_id")
+
+        # Validar que player_id coincida con el token
+        if player_id != request.player_id:
+            return jsonify({"error": "Unauthorized: Cannot sell for other player"}), 403
 
         if not player_id:
             return jsonify({"error": "player_id is required"}), 400
