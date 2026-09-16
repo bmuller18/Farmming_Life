@@ -14,10 +14,12 @@ from pydantic import ValidationError
 
 from backend.middleware import require_auth, require_player_match
 from backend.middleware.rate_limit import create_limiter, setup_rate_limit_error_handler
+from backend.middleware.request_logging import init_request_logging
 from backend.schemas import (
     RegisterRequest, LoginRequest, BuyHouseRequest, PlantCropRequest,
     BuySeedsRequest, SellCropsRequest, SellSingleCropRequest
 )
+from backend.logging_config import api_logger
 from backend.services.player_service import get_player, get_player_by_name
 from backend.services.house_service import get_houses_by_player
 from backend.services.plot_service import get_plots_by_house
@@ -44,6 +46,9 @@ CORS(app)
 # Configurar Rate Limiting
 limiter = create_limiter(app)
 setup_rate_limit_error_handler(app)
+
+# Configurar Request Logging
+init_request_logging(app)
 
 # ============================================================================
 # AUTH ENDPOINTS
