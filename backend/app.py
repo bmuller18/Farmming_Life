@@ -10,8 +10,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime
+from pydantic import ValidationError
 
 from backend.middleware import require_auth, require_player_match
+from backend.schemas import (
+    RegisterRequest, LoginRequest, BuyHouseRequest, PlantCropRequest,
+    BuySeedsRequest, SellCropsRequest, SellSingleCropRequest
+)
 from backend.services.player_service import get_player, get_player_by_name
 from backend.services.house_service import get_houses_by_player
 from backend.services.plot_service import get_plots_by_house
@@ -45,14 +50,14 @@ def register():
     try:
         from backend.services.auth_service import register_player
         data = request.get_json()
-        email = data.get("email")
-        name = data.get("name")
-        password = data.get("password")
 
-        if not email or not name or not password:
-            return jsonify({"error": "email, name, and password are required"}), 400
+        # Validar con Pydantic
+        try:
+            validated = RegisterRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
-        result = register_player(email, name, password)
+        result = register_player(validated.email, validated.name, validated.password)
         return jsonify(result), 201
 
     except ValueError as e:
@@ -67,13 +72,14 @@ def login():
     try:
         from backend.services.auth_service import login_player
         data = request.get_json()
-        email = data.get("email")
-        password = data.get("password")
 
-        if not email or not password:
-            return jsonify({"error": "email and password are required"}), 400
+        # Validar con Pydantic
+        try:
+            validated = LoginRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
-        result = login_player(email, password)
+        result = login_player(validated.email, validated.password)
         return jsonify(result), 200
 
     except ValueError as e:
@@ -132,13 +138,15 @@ def buy_house(player_id):
     """Purchase a house."""
     try:
         data = request.get_json()
-        house_id = data.get("house_id")
 
-        if not house_id:
-            return jsonify({"error": "house_id is required"}), 400
+        # Validar con Pydantic
+        try:
+            validated = BuyHouseRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
         from backend.services.house_service import purchase_house
-        result = purchase_house(player_id, house_id)
+        result = purchase_house(player_id, validated.house_id)
         return jsonify(result), 200
 
     except ValueError as e:
@@ -192,16 +200,19 @@ def get_plot_crop(plot_id):
 
 
 @app.route("/api/plot/<int:plot_id>/plant", methods=["POST"])
+@require_auth
 def plant_crop(plot_id):
     """Plant a crop in a plot."""
     try:
         data = request.get_json()
-        crop_type_id = data.get("crop_type_id")
 
-        if not crop_type_id:
-            return jsonify({"error": "crop_type_id is required"}), 400
+        # Validar con Pydantic
+        try:
+            validated = PlantCropRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
-        crop = plant_crop_in_plot(plot_id, crop_type_id)
+        crop = plant_crop_in_plot(plot_id, validated.crop_type_id)
         return jsonify(crop), 201
 
     except ValueError as e:
@@ -243,18 +254,18 @@ def sell_batch():
     """Sell multiple crops of the same type at once."""
     try:
         data = request.get_json()
-        player_id = data.get("player_id")
-        crop_type_id = data.get("crop_type_id")
-        quantity = data.get("quantity", 1)
+
+        # Validar con Pydantic
+        try:
+            validated = SellCropsRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
         # Validar que player_id coincida con el token
-        if player_id != request.player_id:
+        if validated.player_id != request.player_id:
             return jsonify({"error": "Unauthorized: Cannot sell for other player"}), 403
 
-        if not player_id or not crop_type_id:
-            return jsonify({"error": "player_id and crop_type_id required"}), 400
-
-        result = sell_crops_batch(player_id, crop_type_id, quantity)
+        result = sell_crops_batch(validated.player_id, validated.crop_type_id, validated.quantity)
         return jsonify(result), 200
 
     except ValueError as e:
@@ -321,13 +332,14 @@ def buy_seeds_endpoint(player_id):
     """Buy seeds for planting."""
     try:
         data = request.get_json()
-        crop_type_id = data.get("crop_type_id")
-        quantity = data.get("quantity", 1)
 
-        if not crop_type_id:
-            return jsonify({"error": "crop_type_id is required"}), 400
+        # Validar con Pydantic
+        try:
+            validated = BuySeedsRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
-        result = buy_seeds(player_id, crop_type_id, quantity)
+        result = buy_seeds(player_id, validated.crop_type_id, validated.quantity)
         return jsonify(result), 200
 
     except ValueError as e:
@@ -342,16 +354,18 @@ def sell_crop_endpoint(crop_id):
     """Sell a harvested crop."""
     try:
         data = request.get_json()
-        player_id = data.get("player_id")
+
+        # Validar con Pydantic
+        try:
+            validated = SellSingleCropRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
         # Validar que player_id coincida con el token
-        if player_id != request.player_id:
+        if validated.player_id != request.player_id:
             return jsonify({"error": "Unauthorized: Cannot sell for other player"}), 403
 
-        if not player_id:
-            return jsonify({"error": "player_id is required"}), 400
-
-        result = sell_crops(crop_id, player_id)
+        result = sell_crops(crop_id, validated.player_id)
         return jsonify(result), 200
 
     except ValueError as e:
