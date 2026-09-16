@@ -25,6 +25,23 @@ function setPlayerId(playerId) {
     localStorage.setItem("player_id", playerId);
 }
 
+// Fetch con JWT automático + validación de autenticación
+async function fetchWithAuth(url, options = {}) {
+    const token = getToken();
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(url, { ...options, headers });
+
+    // Si token expiró (401), logout automáticamente
+    if (response.status === 401) {
+        logout();
+        throw new Error("Sesión expirada. Por favor inicia sesión de nuevo.");
+    }
+
+    return response;
+}
+
 function getPlayerId() {
     return localStorage.getItem("player_id");
 }
@@ -148,7 +165,7 @@ window.addEventListener("DOMContentLoaded", () => {
 // ════════════════════════════════════════════════════════════════
 
 async function loadPlayer() {
-    const response = await fetch(`${API_BASE}/player/${PLAYER_ID}`);
+    const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}`);
     if (!response.ok) throw new Error("No se pudo cargar el jugador");
 
     const player = await response.json();
@@ -160,7 +177,7 @@ async function loadPlayer() {
 }
 
 async function loadPrices() {
-    const response = await fetch(`${API_BASE}/prices`);
+    const response = await fetchWithAuth(`${API_BASE}/prices`);
     if (!response.ok) throw new Error("No se pudo cargar precios");
 
     const pricesData = await response.json();
@@ -173,7 +190,7 @@ async function loadPrices() {
 }
 
 async function loadCropTypes() {
-    const response = await fetch(`${API_BASE}/crop-types`);
+    const response = await fetchWithAuth(`${API_BASE}/crop-types`);
     if (!response.ok) throw new Error("No se pudo cargar tipos de cultivos");
     cropTypes = await response.json();
 }
@@ -187,7 +204,7 @@ function parseUTCDate(dateString) {
 }
 
 async function loadFarms() {
-    const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
+    const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
     if (!response.ok) throw new Error("No se pudo cargar las casas");
 
     const houses = await response.json();
@@ -205,7 +222,7 @@ async function loadFarms() {
     let farmsHTML = '';
 
     for (const house of houses) {
-        const plotsResponse = await fetch(`${API_BASE}/house/${house.id}/plots`);
+        const plotsResponse = await fetchWithAuth(`${API_BASE}/house/${house.id}/plots`);
         const plots = await plotsResponse.json();
 
         farmsHTML += `
@@ -215,7 +232,7 @@ async function loadFarms() {
         `;
 
         for (const plot of plots) {
-            const cropResponse = await fetch(`${API_BASE}/plot/${plot.id}/crop`);
+            const cropResponse = await fetchWithAuth(`${API_BASE}/plot/${plot.id}/crop`);
             const { crop } = await cropResponse.json();
 
             if (crop) {
@@ -275,7 +292,7 @@ async function loadFarms() {
 }
 
 async function loadInventory() {
-    const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/inventory`);
+    const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/inventory`);
     if (!response.ok) throw new Error("No se pudo cargar inventario");
 
     const crops = await response.json();
@@ -334,11 +351,11 @@ async function loadInventory() {
 async function loadProperties() {
     try {
         // Load player's houses
-        const playerHousesRes = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
+        const playerHousesRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
         const playerHouses = await playerHousesRes.json();
 
         // Load available houses for purchase
-        const availableRes = await fetch(`${API_BASE}/houses/available/${PLAYER_ID}`);
+        const availableRes = await fetchWithAuth(`${API_BASE}/houses/available/${PLAYER_ID}`);
         const availableHouses = await availableRes.json();
 
         let html = `<div class="section">
@@ -399,7 +416,7 @@ async function loadProperties() {
 
 async function buyHouse(houseId, houseName) {
     try {
-        const response = await fetch(`${API_BASE}/player/${PLAYER_ID}/buy-house`, {
+        const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/buy-house`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ house_id: houseId })
@@ -442,7 +459,7 @@ async function sellBatch(cropTypeId, cropName, cropPrice) {
         const qtyInput = document.getElementById(`${itemId}-qty`);
         const quantity = parseInt(qtyInput.value) || 1;
 
-        const response = await fetch(`${API_BASE}/crops/sell-batch`, {
+        const response = await fetchWithAuth(`${API_BASE}/crops/sell-batch`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -471,17 +488,17 @@ async function sellBatch(cropTypeId, cropName, cropPrice) {
 async function sellAllCrops(cropTypeId, cropName, totalYield, cropPrice) {
     try {
         // Get all crops of this type from the plot data
-        const farmsResponse = await fetch(`${API_BASE}/player/${PLAYER_ID}/houses`);
+        const farmsResponse = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
         const houses = await farmsResponse.json();
 
         let cropToSell = null;
 
         for (const house of houses) {
-            const plotsResponse = await fetch(`${API_BASE}/house/${house.id}/plots`);
+            const plotsResponse = await fetchWithAuth(`${API_BASE}/house/${house.id}/plots`);
             const plots = await plotsResponse.json();
 
             for (const plot of plots) {
-                const cropResponse = await fetch(`${API_BASE}/plot/${plot.id}/crop`);
+                const cropResponse = await fetchWithAuth(`${API_BASE}/plot/${plot.id}/crop`);
                 const { crop } = await cropResponse.json();
 
                 if (crop && crop.crop_type_id == cropTypeId && crop.harvested_at) {
@@ -497,7 +514,7 @@ async function sellAllCrops(cropTypeId, cropName, totalYield, cropPrice) {
             return;
         }
 
-        const sellResponse = await fetch(`${API_BASE}/crop/${cropToSell.id}/sell`, {
+        const sellResponse = await fetchWithAuth(`${API_BASE}/crop/${cropToSell.id}/sell`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ player_id: PLAYER_ID })
@@ -545,7 +562,7 @@ function closePlantModal() {
 
 async function plantCrop(cropTypeId, seedPrice) {
     try {
-        const buyResponse = await fetch(`${API_BASE}/player/${PLAYER_ID}/buy-seeds`, {
+        const buyResponse = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/buy-seeds`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ crop_type_id: cropTypeId, quantity: 1 })
@@ -558,7 +575,7 @@ async function plantCrop(cropTypeId, seedPrice) {
 
         const buyResult = await buyResponse.json();
 
-        const plantResponse = await fetch(`${API_BASE}/plot/${currentPlotId}/plant`, {
+        const plantResponse = await fetchWithAuth(`${API_BASE}/plot/${currentPlotId}/plant`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ crop_type_id: cropTypeId })
@@ -587,7 +604,7 @@ async function harvestCrop(cropId, cropName, yieldAmount) {
     harvestingCrops.add(cropId);
 
     try {
-        const harvestResponse = await fetch(`${API_BASE}/crop/${cropId}/harvest`, {
+        const harvestResponse = await fetchWithAuth(`${API_BASE}/crop/${cropId}/harvest`, {
             method: "POST"
         });
 
@@ -642,7 +659,7 @@ function closeSellModal() {
 
 async function sellCrop() {
     try {
-        const response = await fetch(`${API_BASE}/crop/${currentCropId}/sell`, {
+        const response = await fetchWithAuth(`${API_BASE}/crop/${currentCropId}/sell`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ player_id: PLAYER_ID })
@@ -761,7 +778,5 @@ document.getElementById("sellModal").addEventListener("click", (e) => {
 });
 
 // ════════════════════════════════════════════════════════════════
-// START
+// START - La inicialización ocurre en DOMContentLoaded
 // ════════════════════════════════════════════════════════════════
-
-init();
