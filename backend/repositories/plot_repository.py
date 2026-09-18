@@ -49,6 +49,18 @@ def get_plots_by_player(player_id: int):
     return plots_response.data
 
 
+def create_plot(house_id: int, name: str):
+    """Create a single plot for a house."""
+    supabase = get_supabase_client()
+
+    plot_data = {
+        "house_id": house_id,
+        "name": name,
+    }
+    response = supabase.table("plots").insert(plot_data).execute()
+    return response.data
+
+
 def create_starting_plots(house_id: int):
     """Create the default number of plots for a house based on its plot_count."""
     supabase = get_supabase_client()

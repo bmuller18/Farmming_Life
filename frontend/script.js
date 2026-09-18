@@ -525,6 +525,15 @@ async function loadFarms(force = false) {
         return;
     }
 
+    // Crear plots faltantes (en caso de casas compradas sin plots)
+    try {
+        await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/create-missing-plots`, {
+            method: "POST"
+        });
+    } catch (e) {
+        console.error("Error creating missing plots:", e);
+    }
+
     const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
     if (!response.ok) throw new Error("No se pudo cargar las casas");
 

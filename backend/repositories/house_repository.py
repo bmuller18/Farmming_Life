@@ -84,8 +84,18 @@ def get_available_houses_for_purchase(player_id: int):
 
 
 def purchase_house(player_id: int, house_id: int):
-    """Purchase a house using the RPC function."""
-    return buy_house(player_id, house_id)
+    """Purchase a house using the RPC function and create plots."""
+    result = buy_house(player_id, house_id)
+
+    # Crear plots para la casa comprada
+    from backend.repositories import plot_repository
+    try:
+        plot_repository.create_starting_plots(house_id)
+    except Exception as e:
+        from backend.logging_config import api_logger
+        api_logger.warning(f"[PURCHASE_HOUSE] Could not create plots: {str(e)}")
+
+    return result
 
 
 def sell_house(player_id: int, house_id: int):

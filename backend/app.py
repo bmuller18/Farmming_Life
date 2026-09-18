@@ -324,6 +324,43 @@ def sell_batch():
 
 
 # ============================================================================
+# PLOTS ENDPOINTS
+# ============================================================================
+
+@app.route("/api/player/<int:player_id>/create-missing-plots", methods=["POST"])
+@require_player_match
+def create_missing_plots(player_id):
+    """Create missing plots for all houses owned by player."""
+    try:
+        from backend.services.house_service import get_houses_by_player
+        from backend.repositories import plot_repository
+
+        houses = get_houses_by_player(player_id)
+        created_count = 0
+
+        for house in houses:
+            # Obtener plots existentes
+            existing_plots = get_plots_by_house(house["id"])
+            house_plot_count = house.get("plot_count", 4)
+
+            # Si faltan plots, crearlos
+            if len(existing_plots) < house_plot_count:
+                plots_to_create = house_plot_count - len(existing_plots)
+                for i in range(plots_to_create):
+                    plot_number = len(existing_plots) + i + 1
+                    plot_repository.create_plot(house["id"], f"Plot {plot_number}")
+                    created_count += 1
+
+        return jsonify({
+            "message": f"Created {created_count} missing plots",
+            "created": created_count
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
 # HEALTH CHECK
 # ============================================================================
 
