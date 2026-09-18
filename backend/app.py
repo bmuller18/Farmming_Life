@@ -330,10 +330,65 @@ def harvest_crop(crop_id):
 @app.route("/api/player/<int:player_id>/inventory", methods=["GET"])
 @require_player_match
 def get_inventory(player_id):
-    """Get player's harvested crops (inventory)."""
+    """Get player's complete inventory (crops, seeds, items)."""
     try:
-        crops = get_harvested_crops(player_id)
-        return jsonify(crops)
+        from backend.supabase_client import get_supabase_client
+        supabase = get_supabase_client()
+
+        # Obtener cultivos cosechados
+        harvested_crops = get_harvested_crops(player_id)
+
+        # Obtener player para ver si tiene datos de semillas/items
+        player_response = (
+            supabase
+            .table("player")
+            .select("*")
+            .eq("id", player_id)
+            .single()
+            .execute()
+        )
+
+        player = player_response.data or {}
+
+        # Agrupar cultivos por tipo
+        crops_by_type = {}
+        if harvested_crops:
+            for crop in harvested_crops:
+                crop_type_id = crop['crop_type_id']
+                if crop_type_id not in crops_by_type:
+                    crops_by_type[crop_type_id] = {
+                        'crop_type_id': crop_type_id,
+                        'name': crop['crop_types']['name'],
+                        'quantity': 0,
+                        'price': 0,
+                        'items': []
+                    }
+                crops_by_type[crop_type_id]['quantity'] += crop['yield_amount']
+                crops_by_type[crop_type_id]['items'].append(crop)
+
+        # Obtener precios
+        prices_response = get_all_prices()
+        prices_map = {}
+        if prices_response:
+            for p in prices_response:
+                prices_map[p['crop_type_id']] = p['crop_price']
+
+        # Agregar precios a los cultivos
+        for crop_type_id in crops_by_type:
+            crops_by_type[crop_type_id]['price'] = prices_map.get(crop_type_id, 0)
+
+        return jsonify({
+            'player': {
+                'id': player.get('id'),
+                'name': player.get('name'),
+                'money': player.get('money'),
+                'level': player.get('level')
+            },
+            'crops': list(crops_by_type.values()),
+            'total_value': sum(
+                c['quantity'] * c['price'] for c in crops_by_type.values()
+            )
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

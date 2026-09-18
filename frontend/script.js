@@ -628,7 +628,9 @@ async function loadInventory() {
     const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/inventory`);
     if (!response.ok) throw new Error("No se pudo cargar inventario");
 
-    const crops = await response.json();
+    const data = await response.json();
+    const crops = data.crops || [];
+    const totalValue = data.total_value || 0;
 
     if (crops.length === 0) {
         document.getElementById("farms-section").innerHTML = `
@@ -642,36 +644,56 @@ async function loadInventory() {
 
     let inventoryHTML = `
         <div class="section">
-            <div class="section-title">🎒 Inventario (${crops.length})</div>
+            <div class="section-title">🎒 Inventario</div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; border-radius: 8px; color: white;">
+                    <div style="font-size: 0.9em; opacity: 0.9;">📦 Total Items</div>
+                    <div style="font-size: 1.8em; font-weight: 800;">${crops.reduce((a, c) => a + c.quantity, 0)}</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 15px; border-radius: 8px; color: white;">
+                    <div style="font-size: 0.9em; opacity: 0.9;">💰 Valor Total</div>
+                    <div style="font-size: 1.8em; font-weight: 800;">$${totalValue.toLocaleString()}</div>
+                </div>
+            </div>
+
             <div class="inventory-grid">
     `;
 
     crops.forEach(crop => {
-        const cropType = crop.crop_types.name;
-        const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-        const totalYield = crop.total_yield;
+        const cropType = crop.name;
+        const cropPrice = crop.price || 0;
+        const quantity = crop.quantity;
+        const itemTotal = quantity * cropPrice;
         const itemId = `sell-${crop.crop_type_id}`;
 
         inventoryHTML += `
             <div class="inventory-item">
                 <div class="item-header">
-                    <div class="item-name">${cropType}</div>
-                    <div class="item-yield">x${totalYield}</div>
+                    <div class="item-name">🌾 ${cropType}</div>
+                    <div class="item-yield">x${quantity}</div>
                 </div>
+
+                <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 4px; margin: 12px 0;">
+                    <div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 4px;">Precio por unidad</div>
+                    <div style="font-size: 1.1em; font-weight: 600; color: var(--green-light);">$${cropPrice.toLocaleString()}</div>
+                </div>
+
                 <div style="margin: 12px 0;">
                     <label style="font-size: 0.8em; color: var(--text-secondary); display: block; margin-bottom: 6px;">
-                        Quantity:
+                        Vender cantidad:
                     </label>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="range" id="${itemId}-qty" min="1" max="${totalYield}" value="${totalYield}"
+                        <input type="range" id="${itemId}-qty" min="1" max="${quantity}" value="${quantity}"
                                style="flex: 1; cursor: pointer;"
                                onchange="updateBatchTotal('${crop.crop_type_id}', ${cropPrice})">
-                        <span id="${itemId}-num" style="font-weight: 700; min-width: 30px; text-align: right;">${totalYield}</span>
+                        <span id="${itemId}-num" style="font-weight: 700; min-width: 30px; text-align: right;">${quantity}</span>
                     </div>
                 </div>
-                <div class="item-value" id="${itemId}-total">💰 $${(totalYield * cropPrice).toLocaleString()}</div>
-                <button class="btn btn-sell" onclick="sellBatch('${crop.crop_type_id}', '${cropType}', ${cropPrice})" style="width: 100%; margin-top: 10px;">
-                    Sell <span id="${itemId}-btn-qty">${totalYield}</span>x
+
+                <div class="item-value" id="${itemId}-total" style="margin-bottom: 10px;">💰 $${itemTotal.toLocaleString()}</div>
+                <button class="btn btn-sell" onclick="sellBatch('${crop.crop_type_id}', '${cropType}', ${cropPrice})" style="width: 100%;">
+                    Vender <span id="${itemId}-btn-qty">${quantity}</span>x
                 </button>
             </div>
         `;
