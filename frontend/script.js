@@ -569,13 +569,13 @@ async function loadProperties(force = false) {
         const playerHousesRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
         if (!playerHousesRes.ok) throw new Error("Error cargando casas propias");
         const playerHouses = await playerHousesRes.json();
-        console.log("[loadProperties] Player houses:", playerHouses.length);
+        console.log("[loadProperties] Player houses:", playerHouses.length, playerHouses);
 
         // Load available houses for purchase
         const availableRes = await fetchWithAuth(`${API_BASE}/houses/available/${PLAYER_ID}`);
         if (!availableRes.ok) throw new Error("Error cargando casas disponibles");
         const availableHouses = await availableRes.json();
-        console.log("[loadProperties] Available houses:", availableHouses.length);
+        console.log("[loadProperties] Available houses:", availableHouses.length, availableHouses);
 
         // Guardar en caché
         cache.properties = { playerHouses, availableHouses };
