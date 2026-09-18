@@ -463,14 +463,14 @@ async function renderFarmsFromCache(houses) {
 
                 if (isReady) {
                     const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-                    const totalValue = crop.yield_amount * cropPrice;
+                    const totalValue = (crop.yield_amount || 0) * cropPrice;
 
                     farmsHTML += `
-                        <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${crop.yield_amount})">
+                        <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${(crop.yield_amount || 0)})">
                             <div class="plot-name">${plot.name}</div>
                             <div class="plot-emoji">🌾</div>
                             <div class="plot-crop-name">${cropType}</div>
-                            <div class="plot-yield">📦 ${crop.yield_amount} unidades</div>
+                            <div class="plot-yield">📦 ${(crop.yield_amount || 0)} unidades</div>
                             <div class="plot-value">💰 $${totalValue}</div>
                             <div class="plot-status">✨ Ready to Harvest!</div>
                         </div>
@@ -483,10 +483,10 @@ async function renderFarmsFromCache(houses) {
                     const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
                     const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-                    const totalValue = crop.yield_amount * cropPrice;
+                    const totalValue = (crop.yield_amount || 0) * cropPrice;
 
                     farmsHTML += `
-                        <div class="plot-card with-crop" id="plot-${crop.id}" data-crop-id="${crop.id}" data-crop-name="${cropType}" data-yield="${crop.yield_amount}" data-price="${cropPrice}" data-total="${totalValue}">
+                        <div class="plot-card with-crop" id="plot-${crop.id}" data-crop-id="${crop.id}" data-crop-name="${cropType}" data-yield="${(crop.yield_amount || 0)}" data-price="${cropPrice}" data-total="${totalValue}">
                             <div class="plot-name">${plot.name}</div>
                             <div class="plot-emoji">🌱</div>
                             <div class="plot-crop-name">${cropType}</div>
@@ -576,14 +576,14 @@ async function loadFarms(force = false) {
 
                 if (isReady) {
                     const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-                    const totalValue = crop.yield_amount * cropPrice;
+                    const totalValue = (crop.yield_amount || 0) * cropPrice;
 
                     farmsHTML += `
-                        <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${crop.yield_amount})">
+                        <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${(crop.yield_amount || 0)})">
                             <div class="plot-name">${plot.name}</div>
                             <div class="plot-emoji">🌾</div>
                             <div class="plot-crop-name">${cropType}</div>
-                            <div class="plot-yield">📦 ${crop.yield_amount} unidades</div>
+                            <div class="plot-yield">📦 ${(crop.yield_amount || 0)} unidades</div>
                             <div class="plot-value">💰 $${totalValue}</div>
                             <div class="plot-status">✨ Ready to Harvest!</div>
                         </div>
@@ -596,10 +596,10 @@ async function loadFarms(force = false) {
                     const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
                     const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
-                    const totalValue = crop.yield_amount * cropPrice;
+                    const totalValue = (crop.yield_amount || 0) * cropPrice;
 
                     farmsHTML += `
-                        <div class="plot-card with-crop" id="plot-${crop.id}" data-crop-id="${crop.id}" data-crop-name="${cropType}" data-yield="${crop.yield_amount}" data-price="${cropPrice}" data-total="${totalValue}">
+                        <div class="plot-card with-crop" id="plot-${crop.id}" data-crop-id="${crop.id}" data-crop-name="${cropType}" data-yield="${(crop.yield_amount || 0)}" data-price="${cropPrice}" data-total="${totalValue}">
                             <div class="plot-name">${plot.name}</div>
                             <div class="plot-emoji">🌱</div>
                             <div class="plot-crop-name">${cropType}</div>
