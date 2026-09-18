@@ -912,6 +912,9 @@ async function sellBatch(cropTypeId, cropName, cropPrice) {
         const result = await response.json();
         showMessage(`✅ ¡Vendidos ${result.sold_yield} unidades de ${cropName}! +$${result.total_revenue} 💸`, "success");
 
+        // Registrar actividad
+        logActivity(`💰`, `Vendió ${result.sold_yield} ${cropName} por $${result.total_revenue}`);
+
         await loadPlayer();
         await loadInventory();
     } catch (error) {
@@ -1019,6 +1022,11 @@ async function plantCrop(cropTypeId, seedPrice) {
         if (!plantResponse.ok) throw new Error("Error al plantar");
 
         showMessage(`✅ ¡Semilla plantada! -$${seedPrice}`, "success");
+
+        // Registrar actividad
+        const plantedCropName = cropTypes.find(c => c.id === cropTypeId)?.name || "Cultivo";
+        logActivity(`🌱`, `Plantó ${plantedCropName}`);
+
         closePlantModal();
 
         // Invalidar caché porque el dinero y las parcelas cambiaron
@@ -1057,6 +1065,9 @@ async function harvestCrop(cropId, cropName, yieldAmount) {
         const actualYield = result.yield_amount || yieldAmount;
 
         showMessage(`✅ ¡Cosechado! ${actualYield} unidades guardadas en el inventario`, "success");
+
+        // Registrar actividad
+        logActivity(`🌾`, `Cosechó ${cropName} (${actualYield} unidades)`);
 
         // Invalidar caché porque las parcelas cambiaron
         invalidatePlotsCache();
