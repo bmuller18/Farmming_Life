@@ -307,6 +307,11 @@ async function renderFarmsFromCache(houses) {
             cache.plots.set(house.id, plots);
         }
 
+        // Asegurar que plots es un array
+        if (!Array.isArray(plots)) {
+            plots = [];
+        }
+
         farmsHTML += `
             <div class="section">
                 <div class="section-title">🌾 ${house.name}</div>
@@ -410,7 +415,12 @@ async function loadFarms(force = false) {
 
     for (const house of houses) {
         const plotsResponse = await fetchWithAuth(`${API_BASE}/house/${house.id}/plots`);
-        const plots = await plotsResponse.json();
+        let plots = await plotsResponse.json();
+
+        // Asegurar que plots es un array
+        if (!Array.isArray(plots)) {
+            plots = [];
+        }
 
         farmsHTML += `
             <div class="section">
