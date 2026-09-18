@@ -95,11 +95,13 @@ def get_available_houses_for_purchase(player_id: int):
 
     supabase = get_supabase_client()
 
+    # Obtener casas donde player_id es null O player_id != player_id
+    # neq() no incluye valores null, así que usamos .or()
     response = (
         supabase
         .table("houses")
         .select("*")
-        .neq("player_id", player_id)
+        .or(f"player_id.is.null,player_id.neq.{player_id}")
         .order("price")
         .execute()
     )
