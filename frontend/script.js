@@ -188,6 +188,73 @@ async function handleRegister(event) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════════
+
+async function loadDashboard() {
+    try {
+        // Obtener data del jugador
+        const playerRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}`);
+        const player = await playerRes.json();
+
+        // Obtener casas del jugador
+        const housesRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
+        const houses = await housesRes.json();
+
+        // Obtener cultivos cosechados
+        const inventoryRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/inventory`);
+        const inventory = await inventoryRes.json();
+
+        let html = `
+            <div class="section">
+                <div class="section-title">📊 Dashboard</div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <!-- Dinero -->
+                    <div style="background: linear-gradient(135deg, #4CAF50, #45a049); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px;">💰 Dinero</div>
+                        <div style="font-size: 2em; font-weight: 800;">$${player.money.toLocaleString()}</div>
+                    </div>
+
+                    <!-- Nivel -->
+                    <div style="background: linear-gradient(135deg, #2196F3, #1976D2); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px;">📈 Nivel</div>
+                        <div style="font-size: 2em; font-weight: 800;">${player.level}</div>
+                    </div>
+
+                    <!-- Casas -->
+                    <div style="background: linear-gradient(135deg, #FF9800, #F57C00); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px;">🏡 Casas</div>
+                        <div style="font-size: 2em; font-weight: 800;">${houses.length}</div>
+                    </div>
+
+                    <!-- Cultivos Cosechados -->
+                    <div style="background: linear-gradient(135deg, #E91E63, #C2185B); padding: 20px; border-radius: 10px; color: white;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px;">🌾 Cultivos</div>
+                        <div style="font-size: 2em; font-weight: 800;">${inventory.length}</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-secondary); border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: var(--green-dark);">Resumen</h3>
+                    <ul style="list-style: none; padding: 0; color: var(--text-secondary);">
+                        <li style="padding: 8px 0;">👤 Jugador: <strong>${player.name}</strong></li>
+                        <li style="padding: 8px 0;">📊 Balance: <strong>$${player.money.toLocaleString()}</strong></li>
+                        <li style="padding: 8px 0;">🏡 Propiedades: <strong>${houses.length}</strong></li>
+                        <li style="padding: 8px 0;">🌾 Cultivos: <strong>${inventory.length}</strong></li>
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("farms-section").innerHTML = html;
+    } catch (error) {
+        console.error("Error loading dashboard:", error);
+        showMessage("❌ Error: " + error.message, "error");
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
 // INICIALIZACIÓN
 // ════════════════════════════════════════════════════════════════
 
@@ -1031,13 +1098,7 @@ async function setPage(page) {
 
     try {
         if (page === "dashboard") {
-            // Dashboard vacío por ahora
-            document.getElementById("farms-section").innerHTML = `
-                <div class="section">
-                    <div class="section-title">📊 Dashboard</div>
-                    <p style="color: var(--text-secondary);">Próximamente...</p>
-                </div>
-            `;
+            await loadDashboard();
         } else if (page === "farm") {
             await loadFarms();
         } else if (page === "inventory") {
