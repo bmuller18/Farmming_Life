@@ -36,17 +36,18 @@ def setup_rate_limits(limiter):
 		"/api/crops/sell-batch": "30 per hour",
 		"/api/crop/*/sell": "30 per hour",
 
-		# Lectura - permisivo
-		"/api/player/*": "100 per hour",
-		"/api/player/*/houses": "100 per hour",
-		"/api/player/*/inventory": "100 per hour",
-		"/api/player/*/balance": "100 per hour",
-		"/api/house/*": "100 per hour",
-		"/api/plot/*": "100 per hour",
-		"/api/crop-types": "100 per hour",
+		# Lectura - muy permisivo para operaciones normales
+		"/api/player/*": "500 per hour",
+		"/api/player/*/houses": "500 per hour",
+		"/api/player/*/inventory": "500 per hour",
+		"/api/player/*/balance": "500 per hour",
+		"/api/house/*/plots": "500 per hour",
+		"/api/plot/*": "500 per hour",
+		"/api/house/*": "500 per hour",
+		"/api/crop-types": "500 per hour",
 
 		# Información general
-		"/api/prices": "100 per hour",
+		"/api/prices": "500 per hour",
 		"/health": "1000 per hour"
 	}
 
