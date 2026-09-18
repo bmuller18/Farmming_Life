@@ -126,9 +126,12 @@ def get_player_endpoint(player_id):
 def get_player_houses(player_id):
     """Get all houses owned by a player."""
     try:
+        api_logger.info(f"[GET_HOUSES] Obteniendo casas para player {player_id}")
         houses = get_houses_by_player(player_id)
+        api_logger.info(f"[GET_HOUSES] Encontradas {len(houses)} casas")
         return jsonify(houses)
     except Exception as e:
+        api_logger.error(f"[GET_HOUSES] Error: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 

@@ -37,20 +37,23 @@ def buy_house(player_id: int, house_id: int, jwt_token: str = None):
 
 
 def get_houses_by_player(player_id: int):
-    """Get all houses owned by a player."""
+    """Get all houses owned by a player using RPC."""
+    from backend.logging_config import api_logger
 
     supabase = get_supabase_client()
 
-    response = (
-        supabase
-        .table("houses")
-        .select("*")
-        .eq("player_id", player_id)
-        .order("id")
-        .execute()
-    )
-
-    return response.data
+    try:
+        api_logger.info(f"[GET_HOUSES_REPO] Buscando casas para player {player_id}")
+        response = (
+            supabase
+            .rpc("get_player_houses", {"p_player_id": player_id})
+            .execute()
+        )
+        api_logger.info(f"[GET_HOUSES_REPO] Respuesta: {len(response.data)} casas")
+        return response.data
+    except Exception as e:
+        api_logger.error(f"[GET_HOUSES_REPO] Error: {str(e)}", exc_info=True)
+        raise
 
 
 def get_available_houses_for_purchase(player_id: int):
