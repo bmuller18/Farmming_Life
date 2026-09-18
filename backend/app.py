@@ -382,9 +382,14 @@ def get_inventory(player_id):
         except:
             prices_map = {}
 
-        # Agregar precios a los cultivos
+        # Agregar precios a los cultivos y filtrar los que tienen cantidad > 0
+        crops_with_quantity = []
         for crop_type_id in crops_by_type:
-            crops_by_type[crop_type_id]['price'] = prices_map.get(crop_type_id, 0)
+            crop = crops_by_type[crop_type_id]
+            crop['price'] = prices_map.get(crop_type_id, 0)
+            # Solo incluir cultivos con cantidad > 0
+            if crop['quantity'] > 0:
+                crops_with_quantity.append(crop)
 
         result = {
             'player': {
@@ -393,7 +398,7 @@ def get_inventory(player_id):
                 'money': player.get('money'),
                 'level': player.get('level')
             },
-            'crops': list(crops_by_type.values()),
+            'crops': crops_with_quantity,
             'total_value': sum(
                 c['quantity'] * c['price'] for c in crops_by_type.values()
             )
