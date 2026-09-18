@@ -333,12 +333,17 @@ def get_inventory(player_id):
     """Get player's complete inventory (crops, seeds, items)."""
     try:
         from backend.supabase_client import get_supabase_client
+        from backend.logging_config import api_logger
+
+        api_logger.info(f"[GET_INVENTORY] Obteniendo inventario para player {player_id}")
+
         supabase = get_supabase_client()
 
         # Obtener cultivos cosechados
         harvested_crops = get_harvested_crops(player_id)
+        api_logger.info(f"[GET_INVENTORY] Cultivos cosechados: {len(harvested_crops) if harvested_crops else 0}")
 
-        # Obtener player para ver si tiene datos de semillas/items
+        # Obtener player
         player_response = (
             supabase
             .table("player")
@@ -347,37 +352,40 @@ def get_inventory(player_id):
             .single()
             .execute()
         )
-
         player = player_response.data or {}
 
         # Agrupar cultivos por tipo
         crops_by_type = {}
         if harvested_crops:
             for crop in harvested_crops:
-                crop_type_id = crop['crop_type_id']
+                crop_type_id = crop.get('crop_type_id')
+                crop_type_name = crop.get('crop_types', {}).get('name', 'Unknown')
+                yield_amount = crop.get('yield_amount', 0)
+
                 if crop_type_id not in crops_by_type:
                     crops_by_type[crop_type_id] = {
                         'crop_type_id': crop_type_id,
-                        'name': crop['crop_types']['name'],
+                        'name': crop_type_name,
                         'quantity': 0,
-                        'price': 0,
-                        'items': []
+                        'price': 0
                     }
-                crops_by_type[crop_type_id]['quantity'] += crop['yield_amount']
-                crops_by_type[crop_type_id]['items'].append(crop)
+                crops_by_type[crop_type_id]['quantity'] += yield_amount
 
-        # Obtener precios
-        prices_response = get_all_prices()
-        prices_map = {}
-        if prices_response:
-            for p in prices_response:
-                prices_map[p['crop_type_id']] = p['crop_price']
+        # Obtener precios (puede ser None)
+        try:
+            prices_response = get_all_prices()
+            prices_map = {}
+            if prices_response:
+                for p in prices_response:
+                    prices_map[p.get('crop_type_id')] = p.get('crop_price', 0)
+        except:
+            prices_map = {}
 
         # Agregar precios a los cultivos
         for crop_type_id in crops_by_type:
             crops_by_type[crop_type_id]['price'] = prices_map.get(crop_type_id, 0)
 
-        return jsonify({
+        result = {
             'player': {
                 'id': player.get('id'),
                 'name': player.get('name'),
@@ -388,8 +396,13 @@ def get_inventory(player_id):
             'total_value': sum(
                 c['quantity'] * c['price'] for c in crops_by_type.values()
             )
-        })
+        }
+
+        api_logger.info(f"[GET_INVENTORY] Retornando {len(result['crops'])} tipos de cultivos")
+        return jsonify(result)
+
     except Exception as e:
+        api_logger.error(f"[GET_INVENTORY] Error: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
