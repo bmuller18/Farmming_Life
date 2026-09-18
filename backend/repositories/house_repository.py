@@ -2,81 +2,38 @@ from backend.supabase_client import get_supabase_client
 
 
 def buy_house(player_id: int, house_id: int, jwt_token: str = None):
-    """Purchase a house by updating its owner."""
-    from backend.repositories import price_repository
-    from datetime import datetime, timezone
+    """Purchase a house using RPC function."""
+    from backend.logging_config import api_logger
 
-    supabase = get_supabase_client(jwt_token)
+    api_logger.info(f"[BUY_HOUSE_RPC] Iniciando compra: player={player_id}, house={house_id}")
 
-    # Get the house to check price
-    house_response = (
-        supabase
-        .table("houses")
-        .select("id, price, player_id")
-        .eq("id", house_id)
-        .single()
-        .execute()
-    )
+    supabase = get_supabase_client()
 
-    if not house_response.data:
-        raise ValueError(f"House {house_id} not found")
+    try:
+        rpc_response = (
+            supabase
+            .rpc("purchase_house", {
+                "p_player_id": player_id,
+                "p_house_id": house_id
+            })
+            .execute()
+        )
 
-    house = house_response.data
+        api_logger.info(f"[BUY_HOUSE_RPC] Respuesta: {rpc_response.data}")
 
-    if house["player_id"] is not None:
-        raise ValueError("House is already owned")
+        if not rpc_response.data:
+            raise ValueError("RPC returned no data")
 
-    house_price = house["price"]
+        result = rpc_response.data
 
-    # Get player's current money
-    player_response = (
-        supabase
-        .table("player")
-        .select("money")
-        .eq("id", player_id)
-        .single()
-        .execute()
-    )
+        if isinstance(result, dict) and "error" in result:
+            raise ValueError(result["error"])
 
-    if not player_response.data:
-        raise ValueError(f"Player {player_id} not found")
+        return result
 
-    player_money = player_response.data["money"]
-
-    if player_money < house_price:
-        raise ValueError(f"Insufficient funds. Need ${house_price}, have ${player_money}")
-
-    # Deduct money from player
-    new_balance = player_money - house_price
-    price_repository.update_player_money(player_id, -house_price)
-
-    # Update house owner
-    update_response = (
-        supabase
-        .table("houses")
-        .update({
-            "player_id": player_id,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        })
-        .eq("id", house_id)
-        .execute()
-    )
-
-    if not update_response.data:
-        raise ValueError("Failed to update house ownership")
-
-    house_name = "House"
-    if isinstance(update_response.data, list) and len(update_response.data) > 0:
-        house_name = update_response.data[0].get("name", "House")
-    elif isinstance(update_response.data, dict):
-        house_name = update_response.data.get("name", "House")
-
-    return {
-        "house_id": house_id,
-        "house_name": house_name,
-        "price": house_price,
-        "new_balance": new_balance
-    }
+    except Exception as e:
+        api_logger.error(f"[BUY_HOUSE_RPC] Error: {str(e)}", exc_info=True)
+        raise
 
 
 def get_houses_by_player(player_id: int):
@@ -120,6 +77,6 @@ def get_available_houses_for_purchase(player_id: int):
     return available_houses
 
 
-def purchase_house(player_id: int, house_id: int, jwt_token: str = None):
+def purchase_house(player_id: int, house_id: int):
     """Purchase a house using the RPC function."""
-    return buy_house(player_id, house_id, jwt_token)
+    return buy_house(player_id, house_id)

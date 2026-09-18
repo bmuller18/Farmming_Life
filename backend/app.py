@@ -158,12 +158,8 @@ def buy_house(player_id):
         except ValidationError as e:
             return jsonify({"error": "Validation error", "details": e.errors()}), 400
 
-        # Extraer token JWT para autenticación
-        from backend.middleware.auth_middleware import extract_token_from_header
-        token = extract_token_from_header()
-
         from backend.services.house_service import purchase_house
-        result = purchase_house(player_id, validated.house_id, token)
+        result = purchase_house(player_id, validated.house_id)
         return jsonify(result), 200
 
     except ValueError as e:
