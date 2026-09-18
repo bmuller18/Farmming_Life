@@ -686,7 +686,12 @@ async function loadInventory() {
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="range" id="${itemId}-qty" min="1" max="${quantity}" value="${quantity}"
                                style="flex: 1; cursor: pointer;"
-                               onchange="updateBatchTotal('${crop.crop_type_id}', ${cropPrice})">
+                               oninput="
+                                   const qty = this.value;
+                                   document.getElementById('${itemId}-num').textContent = qty;
+                                   document.getElementById('${itemId}-total').textContent = '💰 $' + (qty * ${cropPrice}).toLocaleString();
+                                   document.getElementById('${itemId}-btn-qty').textContent = qty;
+                               ">
                         <span id="${itemId}-num" style="font-weight: 700; min-width: 30px; text-align: right;">${quantity}</span>
                     </div>
                 </div>
