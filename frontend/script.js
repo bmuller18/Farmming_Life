@@ -617,7 +617,9 @@ async function buyHouse(houseId, houseName) {
         const result = await response.json();
         showMessage(`✅ ¡${houseName} comprada! Tu nuevo balance: $${result.new_balance.toLocaleString()}`, "success");
 
-        await loadPlayer();
+        invalidatePlayerCache();
+        await loadPlayer(true);
+        invalidateFarmsCache();
         await loadProperties();
     } catch (error) {
         showMessage("❌ " + error.message, "error");
