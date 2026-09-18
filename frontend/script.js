@@ -442,6 +442,10 @@ async function renderFarmsFromCache(houses) {
             plots = [];
         }
 
+        // Obtener todos los crops de la casa en una sola petición (optimizado)
+        const cropsResponse = await fetchWithAuth(`${API_BASE}/house/${house.id}/crops`);
+        const allCrops = await cropsResponse.json();
+
         farmsHTML += `
             <div class="section">
                 <div class="section-title">🌾 ${house.name}</div>
@@ -449,16 +453,7 @@ async function renderFarmsFromCache(houses) {
         `;
 
         for (const plot of plots) {
-            // Obtener cultivo del caché si existe, sino hacer request
-            let crop;
-            if (cache.plots.has(plot.id)) {
-                crop = cache.plots.get(plot.id);
-            } else {
-                const cropResponse = await fetchWithAuth(`${API_BASE}/plot/${plot.id}/crop`);
-                const data = await cropResponse.json();
-                crop = data.crop;
-                if (crop) cache.plots.set(plot.id, crop);
-            }
+            const crop = allCrops[plot.id];
 
             if (crop && crop.crop_types) {
                 const cropType = crop.crop_types.name || "Unknown Crop";
