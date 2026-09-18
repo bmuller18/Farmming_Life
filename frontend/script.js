@@ -439,10 +439,7 @@ async function loadFarms(force = false) {
 
         farmsHTML += `
             <div class="section">
-                <div class="section-title">
-                    🌾 ${house.name}
-                    <button class="btn-sell" onclick="openSellHouseModal(${house.id}, '${house.name}')">Sell 💰</button>
-                </div>
+                <div class="section-title">🌾 ${house.name}</div>
                 <div class="plots-grid">
         `;
 
@@ -607,7 +604,9 @@ function renderProperties(data) {
 
     if (playerHouses.length > 0) {
         html += `<div style="margin-bottom: 30px;">
-            <h3 style="font-size: 1.1em; font-weight: 600; color: var(--green-ag); margin-bottom: 12px;">Tus Casas</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1.1em; font-weight: 600; color: var(--green-ag); margin: 0;">Tus Casas</h3>
+            </div>
             <div class="properties-grid">`;
 
         playerHouses.forEach(house => {
@@ -617,6 +616,7 @@ function renderProperties(data) {
                     <div class="property-icon">🏠</div>
                     <div class="property-plots">📍 ${house.plot_count} parcelas</div>
                     <div class="property-price" style="color: var(--green-ag);">✓ Tuya</div>
+                    <button class="btn btn-sell" onclick="openSellHouseModal(${house.id}, '${house.name}')">Sell 💰</button>
                 </div>
             `;
         });
