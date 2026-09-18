@@ -139,17 +139,24 @@ def sell_house(player_id: int, house_id: int):
         player_money = player_response.data["money"]
         new_balance = player_money + refund_amount
 
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+
         # Actualizar casa (quitar dueño)
-        supabase.table("houses").update({
+        house_update = supabase.table("houses").update({
             "player_id": None,
-            "updated_at": "now()"
+            "updated_at": now
         }).eq("id", house_id).execute()
 
+        api_logger.info(f"[SELL_HOUSE] House update: {house_update.data}")
+
         # Actualizar dinero del jugador
-        supabase.table("player").update({
+        player_update = supabase.table("player").update({
             "money": new_balance,
-            "updated_at": "now()"
+            "updated_at": now
         }).eq("id", player_id).execute()
+
+        api_logger.info(f"[SELL_HOUSE] Player update: {player_update.data}")
 
         api_logger.info(f"[SELL_HOUSE] Casa vendida exitosamente")
 
