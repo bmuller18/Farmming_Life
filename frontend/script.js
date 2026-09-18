@@ -315,8 +315,9 @@ async function init() {
         console.log("[init] ✓ Prices cargado");
         await loadCropTypes();
         console.log("[init] ✓ CropTypes cargado");
-        await loadFarms();
-        console.log("[init] ✓ Farms cargado");
+        // Cargar dashboard por defecto
+        await loadDashboard();
+        console.log("[init] ✓ Dashboard cargado");
     } catch (error) {
         console.error("[init] Error:", error);
         showMessage("Error: " + error.message, "error");
