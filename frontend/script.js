@@ -17,6 +17,7 @@ const cache = {
     prices: null,
     cropTypes: null,
     houses: null,
+    properties: null,
     plots: new Map() // plotId -> plot data
 };
 
@@ -33,11 +34,16 @@ function invalidateFarmsCache() {
     cache.plots.clear();
 }
 
+function invalidatePropertiesCache() {
+    cache.properties = null;
+}
+
 function invalidateAllCache() {
     cache.player = null;
     cache.prices = null;
     cache.cropTypes = null;
     cache.houses = null;
+    cache.properties = null;
     cache.plots.clear();
 }
 
@@ -548,8 +554,14 @@ async function loadInventory() {
     document.getElementById("farms-section").innerHTML = inventoryHTML;
 }
 
-async function loadProperties() {
+async function loadProperties(force = false) {
     try {
+        // Usar caché si está disponible y no forzamos reload
+        if (cache.properties && !force) {
+            renderProperties(cache.properties);
+            return;
+        }
+
         // Load player's houses
         const playerHousesRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
         const playerHouses = await playerHousesRes.json();
@@ -558,60 +570,70 @@ async function loadProperties() {
         const availableRes = await fetchWithAuth(`${API_BASE}/houses/available/${PLAYER_ID}`);
         const availableHouses = await availableRes.json();
 
-        let html = `<div class="section">
-            <div class="section-title">🏡 My Properties</div>`;
+        // Guardar en caché
+        cache.properties = { playerHouses, availableHouses };
 
-        if (playerHouses.length > 0) {
-            html += `<div style="margin-bottom: 30px;">
-                <h3 style="font-size: 1.1em; font-weight: 600; color: var(--green-ag); margin-bottom: 12px;">Tus Casas</h3>
-                <div class="properties-grid">`;
+        renderProperties(cache.properties);
 
-            playerHouses.forEach(house => {
-                html += `
-                    <div class="property-card owned">
-                        <div class="property-name">${house.name}</div>
-                        <div class="property-icon">🏠</div>
-                        <div class="property-plots">📍 ${house.plot_count} parcelas</div>
-                        <div class="property-price" style="color: var(--green-ag);">✓ Tuya</div>
-                    </div>
-                `;
-            });
-
-            html += `</div></div>`;
-        }
-
-        if (availableHouses.length > 0) {
-            html += `<h3 style="font-size: 1.1em; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Disponibles para Comprar</h3>
-                <div class="properties-grid">`;
-
-            availableHouses.forEach(house => {
-                const playerBalance = parseInt(document.getElementById("headerMoney").textContent.replace(/,/g, ''));
-                const canAfford = playerBalance >= house.price;
-
-                html += `
-                    <div class="property-card">
-                        <div class="property-name">${house.name}</div>
-                        <div class="property-icon">🏡</div>
-                        <div class="property-plots">📍 ${house.plot_count} parcelas</div>
-                        <div class="property-price">💰 $${house.price.toLocaleString()}</div>
-                        <button class="btn ${canAfford ? 'btn-buy' : 'btn-disabled'}"
-                                onclick="${canAfford ? `buyHouse(${house.id}, '${house.name}')` : ''}"
-                                ${!canAfford ? 'disabled' : ''}>
-                            ${canAfford ? 'Comprar' : 'Sin dinero'}
-                        </button>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-        }
-
-        html += `</div>`;
-        document.getElementById("farms-section").innerHTML = html;
     } catch (error) {
         console.error("Error loading properties:", error);
         showMessage("❌ Error: " + error.message, "error");
     }
+}
+
+function renderProperties(data) {
+    const { playerHouses, availableHouses } = data;
+
+    let html = `<div class="section">
+        <div class="section-title">🏡 My Properties</div>`;
+
+    if (playerHouses.length > 0) {
+        html += `<div style="margin-bottom: 30px;">
+            <h3 style="font-size: 1.1em; font-weight: 600; color: var(--green-ag); margin-bottom: 12px;">Tus Casas</h3>
+            <div class="properties-grid">`;
+
+        playerHouses.forEach(house => {
+            html += `
+                <div class="property-card owned">
+                    <div class="property-name">${house.name}</div>
+                    <div class="property-icon">🏠</div>
+                    <div class="property-plots">📍 ${house.plot_count} parcelas</div>
+                    <div class="property-price" style="color: var(--green-ag);">✓ Tuya</div>
+                </div>
+            `;
+        });
+
+        html += `</div></div>`;
+    }
+
+    if (availableHouses.length > 0) {
+        html += `<h3 style="font-size: 1.1em; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Disponibles para Comprar</h3>
+            <div class="properties-grid">`;
+
+        availableHouses.forEach(house => {
+            const playerBalance = parseInt(document.getElementById("headerMoney").textContent.replace(/,/g, ''));
+            const canAfford = playerBalance >= house.price;
+
+            html += `
+                <div class="property-card">
+                    <div class="property-name">${house.name}</div>
+                    <div class="property-icon">🏡</div>
+                    <div class="property-plots">📍 ${house.plot_count} parcelas</div>
+                    <div class="property-price">💰 $${house.price.toLocaleString()}</div>
+                    <button class="btn ${canAfford ? 'btn-buy' : 'btn-disabled'}"
+                            onclick="${canAfford ? `buyHouse(${house.id}, '${house.name}')` : ''}"
+                            ${!canAfford ? 'disabled' : ''}>
+                        ${canAfford ? 'Comprar' : 'Sin dinero'}
+                    </button>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+    document.getElementById("farms-section").innerHTML = html;
 }
 
 async function buyHouse(houseId, houseName) {
@@ -695,6 +717,7 @@ async function confirmSellHouse() {
 
         invalidatePlayerCache();
         invalidateFarmsCache();
+        invalidatePropertiesCache();
 
         await loadPlayer(true);
         await loadProperties(true);
