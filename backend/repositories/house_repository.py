@@ -95,18 +95,23 @@ def get_available_houses_for_purchase(player_id: int):
 
     supabase = get_supabase_client()
 
-    # Obtener casas donde player_id es null O player_id != player_id
-    # neq() no incluye valores null, así que usamos .or()
+    # Obtener todas las casas y filtrar en Python
+    # neq() en Supabase no incluye valores null, así que obtenemos todas y filtramos
     response = (
         supabase
         .table("houses")
         .select("*")
-        .or(f"player_id.is.null,player_id.neq.{player_id}")
         .order("price")
         .execute()
     )
 
-    return response.data
+    # Filtrar: casas sin dueño (player_id = null) O dueño diferente
+    available_houses = [
+        house for house in response.data
+        if house["player_id"] is None or house["player_id"] != player_id
+    ]
+
+    return available_houses
 
 
 def purchase_house(player_id: int, house_id: int):
