@@ -686,8 +686,13 @@ async function confirmSellHouse() {
         invalidatePlayerCache();
         invalidateFarmsCache();
         await loadPlayer(true);
-        await loadFarms(true);
-        await loadProperties();
+        await loadProperties(true);
+
+        // Cambiar a pestaña de Properties
+        currentPage = "properties";
+        document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
+        document.querySelector("[onclick=\"setPage('properties')\"]").classList.add("active");
+        document.getElementById("pageTitle").textContent = "Properties";
     } catch (error) {
         showMessage("❌ " + error.message, "error");
     }
