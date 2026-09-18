@@ -65,9 +65,15 @@ def buy_house(player_id: int, house_id: int):
     if not update_response.data:
         raise ValueError("Failed to update house ownership")
 
+    house_name = "House"
+    if isinstance(update_response.data, list) and len(update_response.data) > 0:
+        house_name = update_response.data[0].get("name", "House")
+    elif isinstance(update_response.data, dict):
+        house_name = update_response.data.get("name", "House")
+
     return {
         "house_id": house_id,
-        "house_name": update_response.data[0].get("name", "House"),
+        "house_name": house_name,
         "price": house_price,
         "new_balance": new_balance
     }
