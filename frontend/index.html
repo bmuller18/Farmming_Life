@@ -42,10 +42,9 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link in-progress" onclick="setPage('market')">
+                    <a class="nav-link" onclick="setPage('market')">
                         <span class="nav-icon">🛒</span>
                         Market
-                        <span class="badge-in-progress">In Progress</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -177,6 +176,90 @@
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeSellHouseModal()">Cancelar</button>
                 <button class="btn btn-primary" onclick="confirmSellHouse()">Vender</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MARKET MODAL -->
+    <div id="marketModal" class="modal">
+        <div class="modal-content market-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🛒 Market</h2>
+                <button class="modal-close" onclick="closeMarketModal()">✕</button>
+            </div>
+
+            <!-- MARKET TABS -->
+            <div class="market-tabs">
+                <button class="market-tab active" onclick="switchMarketTab('npc')">🏪 Tienda NPC</button>
+                <button class="market-tab" onclick="switchMarketTab('player')">🤝 Mercado Jugador</button>
+                <button class="market-tab" onclick="switchMarketTab('global')">📊 Mercado Global</button>
+            </div>
+
+            <!-- NPC SHOP TAB -->
+            <div id="npcTab" class="market-tab-content active">
+                <div class="npc-shop-grid" id="npcShopGrid"></div>
+            </div>
+
+            <!-- PLAYER MARKET TAB -->
+            <div id="playerTab" class="market-tab-content">
+                <div class="player-market-container">
+                    <div class="market-filter">
+                        <select id="cropFilterSelect" onchange="filterPlayerListings()">
+                            <option value="">Todos los cultivos</option>
+                        </select>
+                    </div>
+                    <div class="market-listings" id="playerListings"></div>
+                </div>
+
+                <div class="player-offers-section">
+                    <h3>📤 Mis Ofertas</h3>
+                    <div class="market-listings" id="myOffers"></div>
+                </div>
+            </div>
+
+            <!-- GLOBAL MARKET TAB -->
+            <div id="globalTab" class="market-tab-content">
+                <div class="global-prices-grid" id="globalPricesGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CREAR OFERTA -->
+    <div id="createOfferModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📤 Crear Oferta</h2>
+                <button class="modal-close" onclick="closeCreateOfferModal()">✕</button>
+            </div>
+            <form onsubmit="submitCreateOffer(event)">
+                <div class="form-group">
+                    <label>Cantidad</label>
+                    <input type="number" id="offerQuantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio por unidad</label>
+                    <input type="number" id="offerPrice" min="0" step="0.01" required>
+                </div>
+                <div id="offerTotal" class="offer-total"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateOfferModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Oferta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL COMPRAR NPC -->
+    <div id="buyNpcModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🛍️ Comprar Item</h2>
+                <button class="modal-close" onclick="closeBuyNpcModal()">✕</button>
+            </div>
+            <div id="buyNpcInfo"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeBuyNpcModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmBuyNpc()">Comprar</button>
             </div>
         </div>
     </div>

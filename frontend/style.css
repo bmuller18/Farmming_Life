@@ -886,3 +886,299 @@ body {
 .btn-primary:active {
     transform: translateY(0);
 }
+
+.btn-secondary {
+    background: var(--blue-sky);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5A99B2;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* MARKET STYLES */
+/* ═══════════════════════════════════════════════════════════════ */
+
+.market-modal {
+    width: 90%;
+    max-width: 900px;
+    max-height: 80vh;
+}
+
+.market-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--shadow-dark);
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px 8px 0 0;
+}
+
+.market-tab {
+    flex: 1;
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    border-bottom: 3px solid transparent;
+}
+
+.market-tab:hover {
+    background: rgba(111, 175, 120, 0.1);
+}
+
+.market-tab.active {
+    color: var(--green-ag);
+    border-bottom-color: var(--green-ag);
+    background: rgba(111, 175, 120, 0.05);
+}
+
+.market-tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.market-tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* NPC SHOP */
+.npc-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.npc-item-card {
+    background: linear-gradient(135deg, rgba(111, 175, 120, 0.1), rgba(242, 199, 92, 0.1));
+    border: 2px solid var(--yellow-gold);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.npc-item-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 4px 8px 16px var(--shadow-dark);
+    border-color: var(--orange-soft);
+}
+
+.item-category {
+    font-size: 0.75em;
+    background: var(--yellow-gold);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.item-name {
+    font-size: 1.1em;
+    font-weight: 700;
+    margin: 8px 0;
+    color: var(--text-primary);
+}
+
+.item-description {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin: 8px 0;
+    min-height: 30px;
+}
+
+.item-price {
+    font-size: 1.2em;
+    font-weight: 800;
+    margin: 10px 0;
+    color: var(--green-ag);
+}
+
+/* PLAYER MARKET */
+.player-market-container {
+    margin-bottom: 30px;
+}
+
+.market-filter {
+    margin-bottom: 15px;
+}
+
+.market-filter select {
+    padding: 8px 12px;
+    border: 2px solid var(--shadow-dark);
+    border-radius: 6px;
+    font-size: 0.95em;
+    cursor: pointer;
+    background: white;
+}
+
+.market-listings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.market-card {
+    background: linear-gradient(135deg, rgba(114, 175, 196, 0.1), rgba(217, 143, 163, 0.1));
+    border: 2px solid var(--blue-sky);
+    border-radius: 8px;
+    padding: 15px;
+    transition: var(--transition);
+}
+
+.market-card:hover {
+    transform: translateX(4px);
+    border-color: var(--pink-soft);
+    box-shadow: 4px 4px 12px var(--shadow-dark);
+}
+
+.market-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--shadow-dark);
+    padding-bottom: 10px;
+}
+
+.market-card-header h3 {
+    font-size: 1.1em;
+    color: var(--text-primary);
+}
+
+.seller-name {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+.offer-status {
+    font-size: 0.85em;
+    color: var(--green-ag);
+    font-weight: 600;
+}
+
+.market-card-details {
+    font-size: 0.95em;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.price-total {
+    font-weight: 700;
+    color: var(--green-ag);
+}
+
+.commission-info {
+    font-size: 0.85em;
+    color: var(--orange-soft);
+    font-weight: 600;
+}
+
+.my-offer {
+    border-color: var(--green-ag);
+    background: linear-gradient(135deg, rgba(111, 175, 120, 0.1), rgba(111, 175, 120, 0.05));
+}
+
+.player-offers-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid var(--shadow-dark);
+}
+
+.player-offers-section h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+/* GLOBAL MARKET */
+.global-prices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.global-price-card {
+    background: linear-gradient(135deg, rgba(114, 175, 196, 0.2), rgba(242, 199, 92, 0.2));
+    border: 2px solid var(--blue-sky);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.global-price-card:hover {
+    transform: scale(1.05);
+    border-color: var(--yellow-gold);
+    box-shadow: 4px 4px 12px var(--shadow-dark);
+}
+
+.price-crop-name {
+    font-weight: 700;
+    font-size: 1em;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.price-current {
+    font-size: 1.3em;
+    font-weight: 800;
+    color: var(--green-ag);
+    margin: 8px 0;
+}
+
+.price-trend {
+    font-size: 1.2em;
+    margin: 8px 0;
+}
+
+.price-base {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--shadow-dark);
+}
+
+.modal-actions .btn {
+    flex: 1;
+}
+
+.offer-total {
+    padding: 10px;
+    background: rgba(111, 175, 120, 0.1);
+    border-radius: 6px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: var(--green-ag);
+}

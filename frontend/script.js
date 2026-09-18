@@ -1211,6 +1211,8 @@ async function setPage(page) {
             await loadInventory();
         } else if (page === "properties") {
             await loadProperties();
+        } else if (page === "market") {
+            await openMarketModal();
         }
     } catch (error) {
         showMessage("❌ " + error.message, "error");
@@ -1265,6 +1267,278 @@ function updateCountdowns() {
             }
         }
     });
+}
+
+// ════════════════════════════════════════════════════════════════
+// MARKET FUNCTIONS
+// ════════════════════════════════════════════════════════════════
+
+async function openMarketModal() {
+    await loadNpcShop();
+    document.getElementById("marketModal").classList.add("active");
+}
+
+function closeMarketModal() {
+    document.getElementById("marketModal").classList.remove("active");
+}
+
+function switchMarketTab(tabName) {
+    document.querySelectorAll(".market-tab-content").forEach(tab => {
+        tab.classList.remove("active");
+    });
+    document.querySelectorAll(".market-tab").forEach(tab => {
+        tab.classList.remove("active");
+    });
+
+    document.getElementById(tabName + "Tab").classList.add("active");
+    event.target.classList.add("active");
+
+    if (tabName === "npc") {
+        loadNpcShop();
+    } else if (tabName === "player") {
+        loadPlayerMarket();
+    } else if (tabName === "global") {
+        loadGlobalMarket();
+    }
+}
+
+async function loadNpcShop() {
+    try {
+        const response = await fetch(`${API_BASE}/market/npc-shop/items`);
+        const items = await response.json();
+
+        const grid = document.getElementById("npcShopGrid");
+        grid.innerHTML = "";
+
+        items.forEach(item => {
+            const itemCard = document.createElement("div");
+            itemCard.className = "npc-item-card";
+            itemCard.innerHTML = `
+                <div class="item-category">${item.category}</div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-description">${item.description || ""}</div>
+                <div class="item-price">💰 ${item.price}</div>
+                <button class="btn btn-primary" onclick="openBuyNpcModal(${item.id}, '${item.name}', ${item.price})">
+                    Comprar
+                </button>
+            `;
+            grid.appendChild(itemCard);
+        });
+    } catch (error) {
+        showMessage("❌ Error cargando tienda: " + error.message, "error");
+    }
+}
+
+async function loadPlayerMarket() {
+    try {
+        await loadPlayerListings();
+        await loadMyOffers();
+    } catch (error) {
+        showMessage("❌ Error cargando mercado: " + error.message, "error");
+    }
+}
+
+async function loadPlayerListings() {
+    try {
+        const cropTypeId = document.getElementById("cropFilterSelect").value || "";
+        const url = cropTypeId
+            ? `${API_BASE}/market/player/listings?crop_type_id=${cropTypeId}`
+            : `${API_BASE}/market/player/listings`;
+
+        const response = await fetch(url);
+        const listings = await response.json();
+
+        const container = document.getElementById("playerListings");
+        container.innerHTML = "";
+
+        if (listings.length === 0) {
+            container.innerHTML = "<p class='empty-state'>No hay ofertas disponibles</p>";
+            return;
+        }
+
+        listings.forEach(listing => {
+            const card = document.createElement("div");
+            card.className = "market-card";
+            const totalPrice = listing.quantity * listing.price_per_unit;
+            const commission = Math.ceil(totalPrice * 0.05);
+
+            card.innerHTML = `
+                <div class="market-card-header">
+                    <h3>${listing.crop_types.name}</h3>
+                    <span class="seller-name">Vendedor: ${listing.player.name}</span>
+                </div>
+                <div class="market-card-details">
+                    <div>Cantidad: ${listing.quantity} unidades</div>
+                    <div>Precio unitario: 💰 ${listing.price_per_unit}</div>
+                    <div class="price-total">Precio total: 💰 ${totalPrice}</div>
+                    <div class="commission-info">Comisión (5%): 💰 ${commission}</div>
+                </div>
+                <button class="btn btn-primary" onclick="confirmBuyListing(${listing.id}, ${totalPrice})">
+                    Comprar
+                </button>
+            `;
+            container.appendChild(card);
+        });
+    } catch (error) {
+        showMessage("❌ Error cargando ofertas: " + error.message, "error");
+    }
+}
+
+async function loadMyOffers() {
+    try {
+        const response = await fetch(`${API_BASE}/market/player/my-offers`, {
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) throw new Error("Error cargando mis ofertas");
+
+        const offers = await response.json();
+        const container = document.getElementById("myOffers");
+        container.innerHTML = "";
+
+        if (offers.length === 0) {
+            container.innerHTML = "<p class='empty-state'>No tienes ofertas activas</p>";
+            return;
+        }
+
+        offers.forEach(offer => {
+            const card = document.createElement("div");
+            card.className = "market-card my-offer";
+            const totalPrice = offer.quantity * offer.price_per_unit;
+
+            card.innerHTML = `
+                <div class="market-card-header">
+                    <h3>${offer.crop_types.name}</h3>
+                    <span class="offer-status">Estado: ${offer.status}</span>
+                </div>
+                <div class="market-card-details">
+                    <div>Cantidad: ${offer.quantity} unidades</div>
+                    <div>Precio unitario: 💰 ${offer.price_per_unit}</div>
+                    <div class="price-total">Precio total: 💰 ${totalPrice}</div>
+                </div>
+                <button class="btn btn-secondary" onclick="cancelOffer(${offer.id})">
+                    Cancelar Oferta
+                </button>
+            `;
+            container.appendChild(card);
+        });
+    } catch (error) {
+        showMessage("❌ Error cargando mis ofertas: " + error.message, "error");
+    }
+}
+
+async function loadGlobalMarket() {
+    try {
+        const response = await fetch(`${API_BASE}/market/global-prices`);
+        const prices = await response.json();
+
+        const grid = document.getElementById("globalPricesGrid");
+        grid.innerHTML = "";
+
+        prices.forEach(price => {
+            const card = document.createElement("div");
+            card.className = "global-price-card";
+
+            const trendIcon = price.trend === "up" ? "📈" : price.trend === "down" ? "📉" : "➡️";
+
+            card.innerHTML = `
+                <div class="price-crop-name">${price.crop_types ? price.crop_types.name : "Cultivo"}</div>
+                <div class="price-current">💰 ${price.current_price}</div>
+                <div class="price-trend">${trendIcon} ${price.trend}</div>
+                <div class="price-base">Base: 💰 ${price.base_price}</div>
+            `;
+            grid.appendChild(card);
+        });
+    } catch (error) {
+        showMessage("❌ Error cargando precios: " + error.message, "error");
+    }
+}
+
+function openBuyNpcModal(itemId, itemName, price) {
+    const info = document.getElementById("buyNpcInfo");
+    info.innerHTML = `
+        <p>¿Comprar <strong>${itemName}</strong>?</p>
+        <p class="price-display">Precio: 💰 ${price}</p>
+    `;
+
+    window.currentNpcItemId = itemId;
+    window.currentNpcItemPrice = price;
+
+    document.getElementById("buyNpcModal").classList.add("active");
+}
+
+function closeBuyNpcModal() {
+    document.getElementById("buyNpcModal").classList.remove("active");
+}
+
+async function confirmBuyNpc() {
+    try {
+        const response = await fetchWithAuth(`${API_BASE}/market/npc-shop/buy`, {
+            method: "POST",
+            body: JSON.stringify({ item_id: window.currentNpcItemId })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error en la compra");
+        }
+
+        const result = await response.json();
+        showMessage(`✅ Compraste ${result.item_name} por 💰 ${result.price}`, "success");
+        invalidatePlayerCache();
+        await loadPlayer();
+        closeBuyNpcModal();
+        await loadNpcShop();
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
+}
+
+async function confirmBuyListing(listingId, totalPrice) {
+    if (!confirm(`¿Comprar esta oferta por 💰 ${totalPrice}?`)) return;
+
+    try {
+        const response = await fetchWithAuth(`${API_BASE}/market/player/accept-offer/${listingId}`, {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error en la compra");
+        }
+
+        const result = await response.json();
+        showMessage(`✅ Compraste ${result.quantity} unidades por 💰 ${result.total_price}`, "success");
+        invalidatePlayerCache();
+        await loadPlayer();
+        await loadPlayerMarket();
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
+}
+
+async function cancelOffer(offerId) {
+    if (!confirm("¿Cancelar esta oferta?")) return;
+
+    try {
+        const response = await fetchWithAuth(`${API_BASE}/market/player/cancel-offer/${offerId}`, {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error cancelando oferta");
+        }
+
+        showMessage("✅ Oferta cancelada", "success");
+        await loadMyOffers();
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
+}
+
+function filterPlayerListings() {
+    loadPlayerListings();
 }
 
 setInterval(updateCountdowns, 1000);
