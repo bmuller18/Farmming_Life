@@ -391,6 +391,24 @@ def get_inventory(player_id):
             if crop['quantity'] > 0:
                 crops_with_quantity.append(crop)
 
+        # Obtener items del inventario
+        from backend.repositories import inventory_repository
+        inventory_items = inventory_repository.get_player_inventory_items(player_id)
+
+        items_formatted = []
+        if inventory_items:
+            for item in inventory_items:
+                item_data = item.get('npc_shop_items', {})
+                items_formatted.append({
+                    'id': item.get('id'),
+                    'item_id': item.get('npc_shop_item_id'),
+                    'name': item_data.get('name', 'Unknown'),
+                    'category': item_data.get('category', ''),
+                    'quantity': item.get('quantity', 0),
+                    'price': item_data.get('price', 0),
+                    'acquired_from': item.get('acquired_from')
+                })
+
         result = {
             'player': {
                 'id': player.get('id'),
@@ -399,12 +417,13 @@ def get_inventory(player_id):
                 'level': player.get('level')
             },
             'crops': crops_with_quantity,
+            'items': items_formatted,
             'total_value': sum(
                 c['quantity'] * c['price'] for c in crops_by_type.values()
             )
         }
 
-        api_logger.info(f"[GET_INVENTORY] Retornando {len(result['crops'])} tipos de cultivos")
+        api_logger.info(f"[GET_INVENTORY] Retornando {len(result['crops'])} tipos de cultivos y {len(items_formatted)} items")
         return jsonify(result)
 
     except Exception as e:
@@ -749,6 +768,34 @@ def get_global_prices():
         return jsonify(prices), 200
     except Exception as e:
         api_logger.error(f"[GET_GLOBAL_PRICES] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/player/<int:player_id>/inventory/items", methods=["GET"])
+@require_player_match
+def get_inventory_items(player_id):
+    """Get player's inventory items."""
+    try:
+        from backend.repositories import inventory_repository
+        items = inventory_repository.get_player_inventory_items(player_id)
+
+        items_formatted = []
+        if items:
+            for item in items:
+                item_data = item.get('npc_shop_items', {})
+                items_formatted.append({
+                    'id': item.get('id'),
+                    'item_id': item.get('npc_shop_item_id'),
+                    'name': item_data.get('name', 'Unknown'),
+                    'category': item_data.get('category', ''),
+                    'quantity': item.get('quantity', 0),
+                    'price': item_data.get('price', 0),
+                    'acquired_from': item.get('acquired_from')
+                })
+
+        return jsonify(items_formatted), 200
+    except Exception as e:
+        api_logger.error(f"[GET_INVENTORY_ITEMS] Error: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 

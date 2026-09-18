@@ -1,6 +1,7 @@
 from backend.repositories import market_repository
 from backend.repositories import player_repository
 from backend.repositories import crop_repository
+from backend.repositories import inventory_repository
 
 
 def buy_from_npc(player_id: int, item_id: int, quantity: int = 1):
@@ -26,6 +27,9 @@ def buy_from_npc(player_id: int, item_id: int, quantity: int = 1):
     # Restar dinero del jugador
     new_balance = player["money"] - total_price
     player_repository.update_player_money(player_id, new_balance)
+
+    # Agregar items al inventario
+    inventory_repository.add_inventory_item(player_id, item_id, quantity, "npc")
 
     return {
         "item_id": item_id,
