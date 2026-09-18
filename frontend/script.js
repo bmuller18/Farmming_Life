@@ -731,21 +731,11 @@ async function confirmSellHouse() {
         await loadPlayer(true);
         await loadProperties(true);
 
-        // Cambiar a pestaña de Properties y recargar
+        // Cambiar a pestaña de Properties
         currentPage = "properties";
         document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
         document.querySelector("[onclick=\"setPage('properties')\"]").classList.add("active");
         document.getElementById("pageTitle").textContent = "Properties";
-
-        // Pequeño delay para asegurar que la UI se actualice
-        setTimeout(() => {
-            document.getElementById("farms-section").innerHTML = `
-                <div class="section">
-                    <div class="section-title">🏡 Properties</div>
-                    <p style="color: var(--text-secondary);">Cargando...</p>
-                </div>
-            `;
-        }, 100);
     } catch (error) {
         showMessage("❌ " + error.message, "error");
     }
