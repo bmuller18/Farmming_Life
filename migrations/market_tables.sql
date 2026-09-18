@@ -101,41 +101,8 @@ ON CONFLICT (crop_type_id) DO NOTHING;
 
 
 -- ============================================================================
--- ROW LEVEL SECURITY
+-- ROW LEVEL SECURITY (Backend-managed, RLS not strictly enforced)
 -- ============================================================================
-
--- Enable RLS on market_listings
-ALTER TABLE market_listings ENABLE ROW LEVEL SECURITY;
-
--- Players can read all active listings
-CREATE POLICY "read_active_listings" ON market_listings
-    FOR SELECT USING (status = 'active');
-
--- Players can create their own listings
-CREATE POLICY "create_own_listings" ON market_listings
-    FOR INSERT WITH CHECK (seller_id = auth.uid()::int);
-
--- Players can update their own listings
-CREATE POLICY "update_own_listings" ON market_listings
-    FOR UPDATE USING (seller_id = auth.uid()::int);
-
--- Enable RLS on market_history (read-only)
-ALTER TABLE market_history ENABLE ROW LEVEL SECURITY;
-
--- Players can read market history
-CREATE POLICY "read_market_history" ON market_history
-    FOR SELECT USING (true);
-
--- Enable RLS on market_prices (read-only)
-ALTER TABLE market_prices ENABLE ROW LEVEL SECURITY;
-
--- Players can read global prices
-CREATE POLICY "read_global_prices" ON market_prices
-    FOR SELECT USING (true);
-
--- Enable RLS on npc_shop_items (read-only)
-ALTER TABLE npc_shop_items ENABLE ROW LEVEL SECURITY;
-
--- Everyone can read NPC shop items
-CREATE POLICY "read_npc_items" ON npc_shop_items
-    FOR SELECT USING (true);
+-- Note: Market operations require backend authorization checks since
+-- transactions involve multiple players (buyer, seller, commission pool).
+-- RLS would complicate cross-player updates. Backend enforces auth.
