@@ -4,6 +4,143 @@ Documento de planeación para fases posteriores a Semana 3.
 
 ---
 
+## 📅 SEMANA 3.5: Market (4 Pestañas)
+
+### Objetivos
+- Implementar sistema completo de mercado
+- 4 mercados independientes con pestañas
+- Sistema de oferta/demanda
+- Monetización futura con dinero real
+
+### Tareas
+
+#### 1. **🏪 Tienda NPC**
+Venta de items fijos por NPC
+
+**Items disponibles:**
+- Semillas (todas las variedades)
+- Herramientas (pala, regadera, etc)
+- Objetos especiales (fertilizante, insecticida, etc)
+
+**Características:**
+- Precios fijos por item (no varían)
+- Stock ilimitado
+- Compra instantánea
+- Log de compras en actividad
+
+**Backend:**
+- Tabla `npc_shop_items` con precio fijo
+- POST `/api/player/<id>/buy-from-npc` 
+- GET `/api/npc-shop/items`
+- Validación de dinero suficiente
+
+**Frontend:**
+- Grid de items con imagen/nombre/precio
+- Botón "Comprar" por item
+- Confirmación de compra
+- Actualizar dinero del jugador
+
+---
+
+#### 2. **🤝 Mercado Jugador**
+Compra/venta entre jugadores con sistema de ofertas
+
+**Características:**
+- Sistema de OFERTAS (no subastas)
+- Comisión 5% en cada transacción
+- Historial de precios último 30 días
+- Búsqueda/filtros por tipo de cultivo
+- Ofertas pendientes de aceptación
+
+**Estructura de Ofertas:**
+```
+oferta {
+  id, seller_id, crop_type_id, quantity, 
+  price_per_unit, total_price, 
+  comission (5%), status, created_at, expires_at
+}
+```
+
+**Backend:**
+- Tabla `market_listings` (ofertas activas)
+- Tabla `market_history` (histórico de transacciones)
+- POST `/api/market/create-offer` (vender)
+- GET `/api/market/listings` (ofertas disponibles)
+- POST `/api/market/accept-offer/<offer_id>` (comprar)
+- GET `/api/market/my-offers` (mis ofertas)
+- GET `/api/market/price-history/<crop_type_id>` (histórico)
+
+**Frontend:**
+- Tab con lista de ofertas activas
+- Filtrar por tipo de cultivo
+- Detalles: cantidad, precio unitario, precio total, comisión
+- Botón "Comprar" para aceptar oferta
+- Mi Tab de ofertas creadas (editar/cancelar)
+- Gráfico de precios históricos (últimos 30 días)
+
+**Monetización Futura:**
+- Comisión 5% va a fondo especial
+- Futura conversión a dinero real (premium currency)
+- Sistema de billetera dual: dinero juego vs premium
+
+---
+
+#### 3. **📊 Mercado Global**
+Precios dinámicos que evolucionan en el tiempo
+
+**Características:**
+- Precios base cambian según TIEMPO (no cantidad)
+- Se actualiza cada hora o cada día (definir)
+- Gráfico de evolución de precios
+- Mostrar tendencia (sube/baja/estable)
+- Predicción simple de precios futuros
+
+**Sistema de Precios:**
+- Base price (configuración)
+- Multiplicador por hora/día del juego
+- Ciclos de demanda (ej: trigo más caro lunes/viernes)
+- Random variance pequeño (±10%)
+
+**Backend:**
+- Tabla `market_prices` con histórico
+- Cálculo de precios cada hora (cron job)
+- GET `/api/market/global-prices`
+- GET `/api/market/price-trend/<crop_type_id>`
+- GET `/api/market/price-prediction/<crop_type_id>`
+
+**Frontend:**
+- Tab con grid de todos los cultivos
+- Mostrar: Precio base, precio actual, tendencia
+- Gráfico de evolución (24h o 7 días)
+- Indicador de tendencia (📈 sube, 📉 baja, ➡️ estable)
+- Mejor hora para vender (predicción)
+
+---
+
+#### 4. **⏰ Detalles Técnicos Generales**
+
+**Transacciones:**
+- Validar dinero suficiente
+- Transferir dinero entre jugadores
+- Restar comisión
+- Actualizar inventario inmediatamente
+- Log en actividad del jugador
+
+**UI/UX:**
+- 4 pestañas limpias en la página Market
+- Iconos claros para cada mercado
+- Confirmaciones antes de comprar
+- Animaciones suave de transacciones
+- Notificaciones de éxito/error
+
+**Testing:**
+- Test de compra NPC
+- Test de aceptar oferta (validar comisión)
+- Test de histórico de precios
+- Test de rechazo sin dinero suficiente
+
+---
+
 ## 📅 SEMANA 4: Infraestructura
 
 ### Objetivos
