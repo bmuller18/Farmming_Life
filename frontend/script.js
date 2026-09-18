@@ -631,13 +631,14 @@ async function loadInventory() {
 
     const data = await response.json();
     const crops = data.crops || [];
+    const items = data.items || [];
     const totalValue = data.total_value || 0;
 
-    if (crops.length === 0) {
+    if (crops.length === 0 && items.length === 0) {
         document.getElementById("farms-section").innerHTML = `
             <div class="section">
                 <div class="section-title">🎒 Inventario</div>
-                <p style="color: var(--text-secondary);">No tienes cultivos cosechados aún.</p>
+                <p style="color: var(--text-secondary);">No tienes cultivos ni items aún.</p>
             </div>
         `;
         return;
@@ -650,7 +651,7 @@ async function loadInventory() {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px;">
                 <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; border-radius: 8px; color: white;">
                     <div style="font-size: 0.9em; opacity: 0.9;">📦 Total Items</div>
-                    <div style="font-size: 1.8em; font-weight: 800;">${crops.reduce((a, c) => a + c.quantity, 0)}</div>
+                    <div style="font-size: 1.8em; font-weight: 800;">${crops.reduce((a, c) => a + c.quantity, 0) + items.reduce((a, i) => a + i.quantity, 0)}</div>
                 </div>
                 <div style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 15px; border-radius: 8px; color: white;">
                     <div style="font-size: 0.9em; opacity: 0.9;">💰 Valor Total</div>
@@ -661,6 +662,7 @@ async function loadInventory() {
             <div class="inventory-grid">
     `;
 
+    // Mostrar cultivos cosechados
     crops.forEach(crop => {
         const cropType = crop.name;
         const cropPrice = crop.price || 0;
@@ -701,6 +703,40 @@ async function loadInventory() {
                 <button class="btn btn-sell" onclick="sellBatch('${crop.crop_type_id}', '${cropType}', ${cropPrice})" style="width: 100%;">
                     Vender <span id="${itemId}-btn-qty">${quantity}</span>x
                 </button>
+            </div>
+        `;
+    });
+
+    // Mostrar items comprados
+    items.forEach(item => {
+        const itemName = item.name;
+        const itemCategory = item.category;
+        const quantity = item.quantity;
+        const price = item.price || 0;
+
+        let categoryIcon = "📦";
+        if (itemCategory === "semilla") categoryIcon = "🌱";
+        else if (itemCategory === "herramienta") categoryIcon = "🔧";
+        else if (itemCategory === "objeto") categoryIcon = "✨";
+
+        inventoryHTML += `
+            <div class="inventory-item">
+                <div class="item-header">
+                    <div class="item-name">${categoryIcon} ${itemName}</div>
+                    <div class="item-yield">x${quantity}</div>
+                </div>
+
+                <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 4px; margin: 12px 0;">
+                    <div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 4px;">Precio</div>
+                    <div style="font-size: 1.1em; font-weight: 600; color: var(--yellow-gold);">$${price.toLocaleString()}</div>
+                </div>
+
+                <div style="padding: 8px; background: rgba(114, 175, 196, 0.1); border-radius: 4px; font-size: 0.85em;">
+                    <span style="color: var(--text-secondary);">Adquirido de:</span>
+                    <span style="font-weight: 600; color: var(--blue-sky);">
+                        ${item.acquired_from === "npc" ? "🏪 Tienda NPC" : "🤝 Jugador"}
+                    </span>
+                </div>
             </div>
         `;
     });
