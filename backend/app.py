@@ -592,6 +592,166 @@ def sell_crop_endpoint(crop_id):
 
 
 # ============================================================================
+# MARKET ENDPOINTS
+# ============================================================================
+
+@app.route("/api/market/npc-shop/items", methods=["GET"])
+def get_npc_shop_items():
+    """Get all items available in NPC shop."""
+    try:
+        from backend.repositories import market_repository
+        items = market_repository.get_npc_shop_items()
+        return jsonify(items), 200
+    except Exception as e:
+        api_logger.error(f"[GET_NPC_ITEMS] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/npc-shop/buy", methods=["POST"])
+@limiter.limit("30 per hour")
+@require_auth
+def buy_from_npc():
+    """Buy an item from NPC shop."""
+    try:
+        from backend.services.market_service import buy_from_npc
+        data = request.get_json()
+
+        item_id = data.get("item_id")
+        player_id = request.player_id
+
+        if not item_id:
+            return jsonify({"error": "item_id required"}), 400
+
+        result = buy_from_npc(player_id, item_id)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        api_logger.error(f"[BUY_NPC] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/player/listings", methods=["GET"])
+def get_market_listings():
+    """Get active player market listings."""
+    try:
+        from backend.repositories import market_repository
+        crop_type_id = request.args.get("crop_type_id", type=int)
+        listings = market_repository.get_market_listings(crop_type_id)
+        return jsonify(listings), 200
+    except Exception as e:
+        api_logger.error(f"[GET_LISTINGS] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/player/create-offer", methods=["POST"])
+@limiter.limit("30 per hour")
+@require_auth
+def create_market_offer():
+    """Create a player market listing (sell offer)."""
+    try:
+        from backend.services.market_service import create_market_offer
+        data = request.get_json()
+
+        crop_type_id = data.get("crop_type_id")
+        quantity = data.get("quantity")
+        price_per_unit = data.get("price_per_unit")
+        player_id = request.player_id
+
+        if not all([crop_type_id, quantity, price_per_unit]):
+            return jsonify({"error": "crop_type_id, quantity, price_per_unit required"}), 400
+
+        result = create_market_offer(player_id, crop_type_id, quantity, price_per_unit)
+        return jsonify(result), 201
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        api_logger.error(f"[CREATE_OFFER] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/player/my-offers", methods=["GET"])
+@require_auth
+def get_player_offers():
+    """Get current player's active market listings."""
+    try:
+        from backend.repositories import market_repository
+        player_id = request.player_id
+        listings = market_repository.get_player_listings(player_id)
+        return jsonify(listings), 200
+    except Exception as e:
+        api_logger.error(f"[GET_MY_OFFERS] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/player/accept-offer/<int:listing_id>", methods=["POST"])
+@limiter.limit("30 per hour")
+@require_auth
+def accept_market_offer(listing_id):
+    """Accept a player market listing (buy)."""
+    try:
+        from backend.services.market_service import accept_market_offer
+        buyer_id = request.player_id
+
+        result = accept_market_offer(buyer_id, listing_id)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        api_logger.error(f"[ACCEPT_OFFER] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/player/cancel-offer/<int:listing_id>", methods=["POST"])
+@require_auth
+def cancel_market_offer(listing_id):
+    """Cancel a player's market listing."""
+    try:
+        from backend.repositories import market_repository
+        player_id = request.player_id
+
+        # Validar que el listing pertenezca al jugador
+        listing = market_repository.get_listing_by_id(listing_id)
+        if not listing or listing["seller_id"] != player_id:
+            return jsonify({"error": "Unauthorized"}), 403
+
+        market_repository.cancel_listing(listing_id)
+        return jsonify({"message": "Listing cancelled"}), 200
+
+    except Exception as e:
+        api_logger.error(f"[CANCEL_OFFER] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/price-history/<int:crop_type_id>", methods=["GET"])
+def get_price_history(crop_type_id):
+    """Get price history for a crop type."""
+    try:
+        from backend.repositories import market_repository
+        days = request.args.get("days", default=30, type=int)
+        history = market_repository.get_price_history(crop_type_id, days)
+        return jsonify(history), 200
+    except Exception as e:
+        api_logger.error(f"[GET_PRICE_HISTORY] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/market/global-prices", methods=["GET"])
+def get_global_prices():
+    """Get current global market prices."""
+    try:
+        from backend.repositories import market_repository
+        prices = market_repository.get_global_prices()
+        return jsonify(prices), 200
+    except Exception as e:
+        api_logger.error(f"[GET_GLOBAL_PRICES] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
 # ERROR HANDLERS
 # ============================================================================
 
