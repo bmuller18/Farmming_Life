@@ -1213,3 +1213,24 @@ body {
     border-color: var(--green-ag);
     box-shadow: 0 0 8px rgba(111, 175, 120, 0.3);
 }
+
+.btn-delete {
+    background: #ff6b6b !important;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-delete:hover {
+    background: #ff5252 !important;
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.btn-delete:active {
+    transform: translateY(0);
+}

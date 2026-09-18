@@ -737,6 +737,10 @@ async function loadInventory() {
                         ${item.acquired_from === "npc" ? "🏪 Tienda NPC" : "🤝 Jugador"}
                     </span>
                 </div>
+
+                <button class="btn btn-delete" onclick="openRemoveItemModal(${item.item_id}, '${item.name}', ${quantity})" style="width: 100%; margin-top: 10px; background: #ff6b6b;">
+                    🗑️ Eliminar
+                </button>
             </div>
         `;
     });
@@ -1599,6 +1603,77 @@ async function cancelOffer(offerId) {
 
 function filterPlayerListings() {
     loadPlayerListings();
+}
+
+// ════════════════════════════════════════════════════════════════
+// REMOVE ITEM FUNCTIONS
+// ════════════════════════════════════════════════════════════════
+
+function openRemoveItemModal(itemId, itemName, quantity) {
+    window.currentRemoveItemId = itemId;
+    window.currentRemoveItemName = itemName;
+    window.currentRemoveItemMaxQty = quantity;
+
+    const info = document.getElementById("removeItemInfo");
+    info.innerHTML = `
+        <div class="buy-form">
+            <div class="form-group">
+                <label>Item: <strong>${itemName}</strong></label>
+                <label>Disponibles: <strong>${quantity}</strong></label>
+            </div>
+            <div class="form-group">
+                <label for="removeQty">Cantidad a eliminar</label>
+                <input type="number" id="removeQty" min="1" max="${quantity}" value="1"
+                       onchange="updateRemoveTotal()" oninput="updateRemoveTotal()">
+            </div>
+            <div style="padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 6px; color: #ff6b6b; font-weight: 600;">
+                ⚠️ Esta acción no se puede deshacer
+            </div>
+        </div>
+    `;
+
+    document.getElementById("removeItemModal").classList.add("active");
+}
+
+function closeRemoveItemModal() {
+    document.getElementById("removeItemModal").classList.remove("active");
+}
+
+function updateRemoveTotal() {
+    const qty = parseInt(document.getElementById("removeQty").value) || 1;
+    if (qty > window.currentRemoveItemMaxQty) {
+        document.getElementById("removeQty").value = window.currentRemoveItemMaxQty;
+    }
+}
+
+async function confirmRemoveItem() {
+    try {
+        const quantity = parseInt(document.getElementById("removeQty").value) || 1;
+
+        if (quantity < 1 || quantity > window.currentRemoveItemMaxQty) {
+            showMessage("❌ Cantidad inválida", "error");
+            return;
+        }
+
+        const response = await fetchWithAuth(
+            `${API_BASE}/player/${PLAYER_ID}/inventory/items/${window.currentRemoveItemId}/remove`,
+            {
+                method: "POST",
+                body: JSON.stringify({ quantity: quantity })
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error eliminando item");
+        }
+
+        showMessage(`✅ ${quantity}x ${window.currentRemoveItemName} eliminados`, "success");
+        closeRemoveItemModal();
+        await loadInventory();
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
 }
 
 setInterval(updateCountdowns, 1000);

@@ -799,6 +799,33 @@ def get_inventory_items(player_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/player/<int:player_id>/inventory/items/<int:item_id>/remove", methods=["POST"])
+@limiter.limit("30 per hour")
+@require_player_match
+def remove_inventory_item(player_id, item_id):
+    """Remove items from player's inventory."""
+    try:
+        from backend.repositories import inventory_repository
+        data = request.get_json()
+
+        quantity = data.get("quantity", 1)
+
+        if quantity < 1:
+            return jsonify({"error": "Quantity must be at least 1"}), 400
+
+        result = inventory_repository.remove_inventory_item(player_id, item_id, quantity)
+        return jsonify({
+            "message": f"Removed {quantity} items",
+            "result": result
+        }), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        api_logger.error(f"[REMOVE_ITEM] Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================================
 # ERROR HANDLERS
 # ============================================================================

@@ -264,6 +264,21 @@
         </div>
     </div>
 
+    <!-- MODAL ELIMINAR ITEM -->
+    <div id="removeItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🗑️ Eliminar Item</h2>
+                <button class="modal-close" onclick="closeRemoveItemModal()">✕</button>
+            </div>
+            <div id="removeItemInfo"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeRemoveItemModal()">Cancelar</button>
+                <button class="btn btn-primary" style="background: #ff6b6b;" onclick="confirmRemoveItem()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MESSAGE -->
     <div id="message" class="message"></div>
 
