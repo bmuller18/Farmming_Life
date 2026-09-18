@@ -171,6 +171,30 @@ def buy_house(player_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/player/<int:player_id>/sell-house", methods=["POST"])
+@limiter.limit("10 per hour")
+@require_player_match
+def sell_house(player_id):
+    """Sell a house."""
+    try:
+        data = request.get_json()
+
+        # Validar con Pydantic
+        try:
+            validated = BuyHouseRequest(**data)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
+
+        from backend.services.house_service import sell_house
+        result = sell_house(player_id, validated.house_id)
+        return jsonify(result), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================================
 # PLOT ENDPOINTS
 # ============================================================================

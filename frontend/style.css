@@ -215,7 +215,26 @@ body {
     margin-bottom: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
+}
+
+.btn-sell {
+    padding: 6px 12px;
+    font-size: 0.8em;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-left: auto;
+}
+
+.btn-sell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
 }
 
 /* PLOTS GRID */

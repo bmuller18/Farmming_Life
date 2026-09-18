@@ -86,3 +86,80 @@ def get_available_houses_for_purchase(player_id: int):
 def purchase_house(player_id: int, house_id: int):
     """Purchase a house using the RPC function."""
     return buy_house(player_id, house_id)
+
+
+def sell_house(player_id: int, house_id: int):
+    """Sell a house back to the system."""
+    from backend.logging_config import api_logger
+
+    api_logger.info(f"[SELL_HOUSE] Vendiendo casa {house_id} de player {player_id}")
+
+    supabase = get_supabase_client()
+
+    try:
+        # Obtener datos de la casa
+        house_response = (
+            supabase
+            .table("houses")
+            .select("id, price, name, player_id")
+            .eq("id", house_id)
+            .single()
+            .execute()
+        )
+
+        if not house_response.data:
+            raise ValueError(f"House {house_id} not found")
+
+        house = house_response.data
+
+        if house["player_id"] != player_id:
+            raise ValueError("You don't own this house")
+
+        house_price = house["price"]
+        house_name = house["name"]
+
+        # Devolver 80% del precio original
+        refund_amount = int(house_price * 0.8)
+
+        api_logger.info(f"[SELL_HOUSE] Precio: ${house_price}, Reembolso: ${refund_amount}")
+
+        # Actualizar dinero del jugador
+        player_response = (
+            supabase
+            .table("player")
+            .select("money")
+            .eq("id", player_id)
+            .single()
+            .execute()
+        )
+
+        if not player_response.data:
+            raise ValueError(f"Player {player_id} not found")
+
+        player_money = player_response.data["money"]
+        new_balance = player_money + refund_amount
+
+        # Actualizar casa (quitar dueño)
+        supabase.table("houses").update({
+            "player_id": None,
+            "updated_at": "now()"
+        }).eq("id", house_id).execute()
+
+        # Actualizar dinero del jugador
+        supabase.table("player").update({
+            "money": new_balance,
+            "updated_at": "now()"
+        }).eq("id", player_id).execute()
+
+        api_logger.info(f"[SELL_HOUSE] Casa vendida exitosamente")
+
+        return {
+            "house_id": house_id,
+            "house_name": house_name,
+            "refund_amount": refund_amount,
+            "new_balance": new_balance
+        }
+
+    except Exception as e:
+        api_logger.error(f"[SELL_HOUSE] Error: {str(e)}", exc_info=True)
+        raise

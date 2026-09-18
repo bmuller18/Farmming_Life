@@ -414,7 +414,10 @@ async function loadFarms(force = false) {
 
         farmsHTML += `
             <div class="section">
-                <div class="section-title">🌾 ${house.name}</div>
+                <div class="section-title">
+                    🌾 ${house.name}
+                    <button class="btn-sell" onclick="sellHouse(${house.id}, '${house.name}')">Sell 💰</button>
+                </div>
                 <div class="plots-grid">
         `;
 
@@ -616,6 +619,36 @@ async function buyHouse(houseId, houseName) {
 
         const result = await response.json();
         showMessage(`✅ ¡${houseName} comprada! Tu nuevo balance: $${result.new_balance.toLocaleString()}`, "success");
+
+        invalidatePlayerCache();
+        invalidateFarmsCache();
+        await loadPlayer(true);
+        await loadFarms(true);
+        await loadProperties();
+    } catch (error) {
+        showMessage("❌ " + error.message, "error");
+    }
+}
+
+async function sellHouse(houseId, houseName) {
+    if (!confirm(`¿Estás seguro de que quieres vender ${houseName}? Recibirás el 80% del valor original.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/sell-house`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ house_id: houseId })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Error al vender");
+        }
+
+        const result = await response.json();
+        showMessage(`✅ ¡${houseName} vendida! Recibiste $${result.refund_amount.toLocaleString()}. Nuevo balance: $${result.new_balance.toLocaleString()}`, "success");
 
         invalidatePlayerCache();
         invalidateFarmsCache();

@@ -14,3 +14,8 @@ def get_available_houses_for_purchase(player_id: int):
 def purchase_house(player_id: int, house_id: int):
     """Purchase a house for a player."""
     return house_repository.purchase_house(player_id, house_id)
+
+
+def sell_house(player_id: int, house_id: int):
+    """Sell a house owned by a player."""
+    return house_repository.sell_house(player_id, house_id)
