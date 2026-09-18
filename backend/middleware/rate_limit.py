@@ -9,8 +9,8 @@ from flask import request
 def create_limiter(app):
 	"""Crea y configura Flask-Limiter"""
 	def rate_limit_key():
-		# No aplicar rate limiting a preflight requests (OPTIONS)
-		if request.method == "OPTIONS":
+		# No aplicar rate limiting a preflight requests (OPTIONS) ni a GET requests
+		if request.method == "OPTIONS" or request.method == "GET":
 			return None
 		return get_remote_address()
 
@@ -37,17 +37,18 @@ def setup_rate_limits(limiter):
 		"/api/crop/*/sell": "30 per hour",
 
 		# Lectura - muy permisivo para operaciones normales
-		"/api/player/*": "500 per hour",
-		"/api/player/*/houses": "500 per hour",
-		"/api/player/*/inventory": "500 per hour",
-		"/api/player/*/balance": "500 per hour",
-		"/api/house/*/plots": "500 per hour",
-		"/api/plot/*": "500 per hour",
-		"/api/house/*": "500 per hour",
-		"/api/crop-types": "500 per hour",
+		"/api/player/*": "1000 per hour",
+		"/api/player/*/houses": "1000 per hour",
+		"/api/player/*/inventory": "1000 per hour",
+		"/api/player/*/balance": "1000 per hour",
+		"/api/house/*/plots": "1000 per hour",
+		"/api/plot/*": "1000 per hour",
+		"/api/plot/*/crop": "1000 per hour",
+		"/api/house/*": "1000 per hour",
+		"/api/crop-types": "1000 per hour",
 
 		# Información general
-		"/api/prices": "500 per hour",
+		"/api/prices": "1000 per hour",
 		"/health": "1000 per hour"
 	}
 

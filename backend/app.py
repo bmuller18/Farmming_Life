@@ -217,6 +217,48 @@ def get_house_plots(house_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/house/<int:house_id>/crops", methods=["GET"])
+def get_house_crops(house_id):
+    """Get all crops for all plots in a house (single optimized query)."""
+    try:
+        from backend.supabase_client import get_supabase_client
+        supabase = get_supabase_client()
+
+        # Get all plots for this house first
+        plots_response = (
+            supabase
+            .table("plots")
+            .select("id")
+            .eq("house_id", house_id)
+            .execute()
+        )
+
+        if not plots_response.data:
+            return jsonify({})
+
+        plot_ids = [p['id'] for p in plots_response.data]
+
+        # Single query to get all active crops for these plots
+        crops_response = (
+            supabase
+            .table("crops")
+            .select("*, crop_types(*)")
+            .in_("plot_id", plot_ids)
+            .is_("harvested_at", "null")
+            .execute()
+        )
+
+        # Convert to dict by plot_id for fast lookup
+        result = {}
+        if crops_response.data:
+            for crop in crops_response.data:
+                result[crop['plot_id']] = crop
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================================================================
 # CROP TYPE ENDPOINTS
 # ============================================================================
@@ -334,6 +376,9 @@ def create_missing_plots(player_id):
     try:
         from backend.services.house_service import get_houses_by_player
         from backend.repositories import plot_repository
+        from backend.logging_config import api_logger
+
+        api_logger.info(f"[CREATE_MISSING_PLOTS] Creating plots for player {player_id}")
 
         houses = get_houses_by_player(player_id)
         created_count = 0
@@ -341,15 +386,24 @@ def create_missing_plots(player_id):
         for house in houses:
             # Obtener plots existentes
             existing_plots = get_plots_by_house(house["id"])
+            # Usar plot_count de la casa, o default a 4
             house_plot_count = house.get("plot_count", 4)
+
+            api_logger.info(f"[CREATE_MISSING_PLOTS] House {house['id']}: {len(existing_plots)} existing, need {house_plot_count}")
 
             # Si faltan plots, crearlos
             if len(existing_plots) < house_plot_count:
                 plots_to_create = house_plot_count - len(existing_plots)
                 for i in range(plots_to_create):
                     plot_number = len(existing_plots) + i + 1
-                    plot_repository.create_plot(house["id"], f"Plot {plot_number}")
-                    created_count += 1
+                    try:
+                        plot_repository.create_plot(house["id"], f"Plot {plot_number}")
+                        api_logger.info(f"[CREATE_MISSING_PLOTS] Created Plot {plot_number} for house {house['id']}")
+                        created_count += 1
+                    except Exception as plot_error:
+                        api_logger.error(f"[CREATE_MISSING_PLOTS] Error creating plot: {str(plot_error)}")
+
+        api_logger.info(f"[CREATE_MISSING_PLOTS] Total created: {created_count}")
 
         return jsonify({
             "message": f"Created {created_count} missing plots",
@@ -357,6 +411,7 @@ def create_missing_plots(player_id):
         }), 200
 
     except Exception as e:
+        api_logger.error(f"[CREATE_MISSING_PLOTS] Error: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 

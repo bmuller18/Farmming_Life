@@ -460,8 +460,8 @@ async function renderFarmsFromCache(houses) {
                 if (crop) cache.plots.set(plot.id, crop);
             }
 
-            if (crop) {
-                const cropType = crop.crop_types.name;
+            if (crop && crop.crop_types) {
+                const cropType = crop.crop_types.name || "Unknown Crop";
                 const readyAt = parseUTCDate(crop.ready_at);
                 const now = new Date();
                 const isReady = now >= readyAt;
@@ -567,12 +567,14 @@ async function loadFarms(force = false) {
                 <div class="plots-grid">
         `;
 
-        for (const plot of plots) {
-            const cropResponse = await fetchWithAuth(`${API_BASE}/plot/${plot.id}/crop`);
-            const { crop } = await cropResponse.json();
+        // Cargar todos los crops de la casa en una sola petición
+        const cropsResponse = await fetchWithAuth(`${API_BASE}/house/${house.id}/crops`);
+        const allCrops = await cropsResponse.json();
 
-            if (crop) {
-                const cropType = crop.crop_types.name;
+        for (const plot of plots) {
+            const crop = allCrops[plot.id];
+            if (crop && crop.crop_types) {
+                const cropType = crop.crop_types.name || "Unknown Crop";
                 const readyAt = parseUTCDate(crop.ready_at);
                 const now = new Date();
                 const isReady = now >= readyAt;

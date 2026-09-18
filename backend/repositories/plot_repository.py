@@ -70,7 +70,10 @@ def create_starting_plots(house_id: int):
     if not house_response.data:
         raise ValueError(f"House with id {house_id} not found")
 
-    plot_count = house_response.data["plot_count"]
+    # Use plot_count from house, or default to 4
+    plot_count = house_response.data.get("plot_count", 4)
+    if not plot_count:
+        plot_count = 4
 
     # Create plots
     for i in range(1, plot_count + 1):
