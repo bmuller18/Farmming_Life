@@ -1,12 +1,12 @@
 from backend.supabase_client import get_supabase_client
 
 
-def buy_house(player_id: int, house_id: int):
+def buy_house(player_id: int, house_id: int, jwt_token: str = None):
     """Purchase a house by updating its owner."""
     from backend.repositories import price_repository
     from datetime import datetime, timezone
 
-    supabase = get_supabase_client()
+    supabase = get_supabase_client(jwt_token)
 
     # Get the house to check price
     house_response = (
@@ -120,6 +120,6 @@ def get_available_houses_for_purchase(player_id: int):
     return available_houses
 
 
-def purchase_house(player_id: int, house_id: int):
+def purchase_house(player_id: int, house_id: int, jwt_token: str = None):
     """Purchase a house using the RPC function."""
-    return buy_house(player_id, house_id)
+    return buy_house(player_id, house_id, jwt_token)

@@ -178,11 +178,17 @@ async function handleRegister(event) {
 
 async function init() {
     try {
+        console.log("[init] Iniciando carga de datos...");
         await loadPlayer();
+        console.log("[init] ✓ Player cargado");
         await loadPrices();
+        console.log("[init] ✓ Prices cargado");
         await loadCropTypes();
+        console.log("[init] ✓ CropTypes cargado");
         await loadFarms();
+        console.log("[init] ✓ Farms cargado");
     } catch (error) {
+        console.error("[init] Error:", error);
         showMessage("Error: " + error.message, "error");
     }
 }
