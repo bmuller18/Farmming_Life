@@ -416,7 +416,7 @@ async function loadFarms(force = false) {
             <div class="section">
                 <div class="section-title">
                     🌾 ${house.name}
-                    <button class="btn-sell" onclick="sellHouse(${house.id}, '${house.name}')">Sell 💰</button>
+                    <button class="btn-sell" onclick="openSellHouseModal(${house.id}, '${house.name}')">Sell 💰</button>
                 </div>
                 <div class="plots-grid">
         `;
@@ -630,10 +630,43 @@ async function buyHouse(houseId, houseName) {
     }
 }
 
-async function sellHouse(houseId, houseName) {
-    if (!confirm(`¿Estás seguro de que quieres vender ${houseName}? Recibirás el 80% del valor original.`)) {
-        return;
-    }
+let pendingSellHouse = { id: null, name: null };
+
+function openSellHouseModal(houseId, houseName) {
+    pendingSellHouse = { id: houseId, name: houseName };
+
+    // Obtener precio estimado (80% del valor)
+    // Necesitaríamos buscar el precio de la casa en el caché
+    const refundInfo = `
+        <div class="sell-house-info-item">
+            <span class="sell-house-info-label">Casa:</span>
+            <span class="sell-house-info-value">${houseName}</span>
+        </div>
+        <div class="sell-house-info-item">
+            <span class="sell-house-info-label">Tipo:</span>
+            <span class="sell-house-info-value">Propiedad</span>
+        </div>
+        <div class="sell-house-info-item">
+            <span class="sell-house-info-label">Compensación:</span>
+            <span class="sell-house-info-value">80% del valor original</span>
+        </div>
+    `;
+
+    document.getElementById("sellHouseInfo").innerHTML = refundInfo;
+    document.getElementById("sellHouseModal").classList.add("active");
+}
+
+function closeSellHouseModal() {
+    document.getElementById("sellHouseModal").classList.remove("active");
+    pendingSellHouse = { id: null, name: null };
+}
+
+async function confirmSellHouse() {
+    const { id: houseId, name: houseName } = pendingSellHouse;
+
+    if (!houseId) return;
+
+    closeSellHouseModal();
 
     try {
         const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/sell-house`, {

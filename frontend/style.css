@@ -220,8 +220,8 @@ body {
 }
 
 .btn-sell {
-    padding: 6px 12px;
-    font-size: 0.8em;
+    padding: 8px 16px;
+    font-size: 0.85em;
     background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
     color: white;
     border: none;
@@ -235,6 +235,52 @@ body {
 .btn-sell:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.sell-house-info {
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.sell-house-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sell-house-info-item:last-child {
+    border-bottom: none;
+}
+
+.sell-house-info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.sell-house-info-value {
+    color: var(--green-dark);
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
 }
 
 /* PLOTS GRID */
