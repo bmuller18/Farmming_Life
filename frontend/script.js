@@ -1030,7 +1030,15 @@ async function setPage(page) {
     document.getElementById("pageTitle").textContent = titles[page];
 
     try {
-        if (page === "dashboard" || page === "farm") {
+        if (page === "dashboard") {
+            // Dashboard vacío por ahora
+            document.getElementById("farms-section").innerHTML = `
+                <div class="section">
+                    <div class="section-title">📊 Dashboard</div>
+                    <p style="color: var(--text-secondary);">Próximamente...</p>
+                </div>
+            `;
+        } else if (page === "farm") {
             await loadFarms();
         } else if (page === "inventory") {
             await loadInventory();
