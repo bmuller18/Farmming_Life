@@ -1182,3 +1182,34 @@ body {
     font-weight: 600;
     color: var(--green-ag);
 }
+
+.buy-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.buy-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.buy-form label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.buy-form input[type="number"] {
+    padding: 10px;
+    border: 2px solid var(--blue-sky);
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+.buy-form input[type="number"]:focus {
+    outline: none;
+    border-color: var(--green-ag);
+    box-shadow: 0 0 8px rgba(111, 175, 120, 0.3);
+}

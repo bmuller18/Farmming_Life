@@ -617,12 +617,13 @@ def buy_from_npc():
         data = request.get_json()
 
         item_id = data.get("item_id")
+        quantity = data.get("quantity", 1)
         player_id = request.player_id
 
         if not item_id:
             return jsonify({"error": "item_id required"}), 400
 
-        result = buy_from_npc(player_id, item_id)
+        result = buy_from_npc(player_id, item_id, quantity)
         return jsonify(result), 200
 
     except ValueError as e:

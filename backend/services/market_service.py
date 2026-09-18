@@ -3,30 +3,36 @@ from backend.repositories import player_repository
 from backend.repositories import crop_repository
 
 
-def buy_from_npc(player_id: int, item_id: int):
-    """Comprar un item de la tienda NPC."""
+def buy_from_npc(player_id: int, item_id: int, quantity: int = 1):
+    """Comprar items de la tienda NPC."""
     # Obtener item de la tienda
     item = market_repository.get_npc_item(item_id)
 
     if not item:
         raise ValueError(f"Item {item_id} not found in NPC shop")
 
+    if quantity < 1:
+        raise ValueError("Quantity must be at least 1")
+
     item_price = item["price"]
+    total_price = item_price * quantity
 
     # Obtener dinero del jugador
     player = player_repository.get_player(player_id)
 
-    if player["money"] < item_price:
-        raise ValueError("Insufficient money")
+    if player["money"] < total_price:
+        raise ValueError(f"Insufficient money. Need {total_price}, have {player['money']}")
 
     # Restar dinero del jugador
-    new_balance = player["money"] - item_price
+    new_balance = player["money"] - total_price
     player_repository.update_player_money(player_id, new_balance)
 
     return {
         "item_id": item_id,
         "item_name": item["name"],
-        "price": item_price,
+        "quantity": quantity,
+        "price_per_unit": item_price,
+        "total_price": total_price,
         "new_balance": new_balance
     }
 

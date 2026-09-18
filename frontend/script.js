@@ -1455,16 +1455,35 @@ async function loadGlobalMarket() {
 }
 
 function openBuyNpcModal(itemId, itemName, price) {
-    const info = document.getElementById("buyNpcInfo");
-    info.innerHTML = `
-        <p>¿Comprar <strong>${itemName}</strong>?</p>
-        <p class="price-display">Precio: 💰 ${price}</p>
-    `;
-
     window.currentNpcItemId = itemId;
     window.currentNpcItemPrice = price;
+    window.currentNpcItemName = itemName;
+
+    const info = document.getElementById("buyNpcInfo");
+    info.innerHTML = `
+        <div class="buy-form">
+            <div class="form-group">
+                <label>Item: <strong>${itemName}</strong></label>
+                <label>Precio unitario: 💰 ${price}</label>
+            </div>
+            <div class="form-group">
+                <label for="npcQuantity">Cantidad</label>
+                <input type="number" id="npcQuantity" min="1" value="1"
+                       onchange="updateNpcTotalPrice()" oninput="updateNpcTotalPrice()">
+            </div>
+            <div class="price-display">
+                <strong>Total: 💰 <span id="npcTotalPrice">${price}</span></strong>
+            </div>
+        </div>
+    `;
 
     document.getElementById("buyNpcModal").classList.add("active");
+}
+
+function updateNpcTotalPrice() {
+    const quantity = parseInt(document.getElementById("npcQuantity").value) || 1;
+    const total = quantity * window.currentNpcItemPrice;
+    document.getElementById("npcTotalPrice").textContent = total;
 }
 
 function closeBuyNpcModal() {
@@ -1473,9 +1492,14 @@ function closeBuyNpcModal() {
 
 async function confirmBuyNpc() {
     try {
+        const quantity = parseInt(document.getElementById("npcQuantity").value) || 1;
+
         const response = await fetchWithAuth(`${API_BASE}/market/npc-shop/buy`, {
             method: "POST",
-            body: JSON.stringify({ item_id: window.currentNpcItemId })
+            body: JSON.stringify({
+                item_id: window.currentNpcItemId,
+                quantity: quantity
+            })
         });
 
         if (!response.ok) {
@@ -1484,7 +1508,7 @@ async function confirmBuyNpc() {
         }
 
         const result = await response.json();
-        showMessage(`✅ Compraste ${result.item_name} por 💰 ${result.price}`, "success");
+        showMessage(`✅ Compraste ${result.quantity}x ${result.item_name} por 💰 ${result.total_price}`, "success");
         invalidatePlayerCache();
         await loadPlayer();
         closeBuyNpcModal();
