@@ -69,7 +69,7 @@ def get_market_listings(crop_type_id: int = None, limit: int = 50):
     query = (
         supabase
         .table("market_listings")
-        .select("*, crop_types(*), player(name)")
+        .select("*, crop_types(*), player!market_listings_seller_id_fkey(name)")
         .eq("status", "active")
         .order("created_at", desc=True)
         .limit(limit)
@@ -90,7 +90,7 @@ def get_listing_by_id(listing_id: int):
     response = (
         supabase
         .table("market_listings")
-        .select("*, crop_types(*), player(name)")
+        .select("*, crop_types(*), player!market_listings_seller_id_fkey(name)")
         .eq("id", listing_id)
         .single()
         .execute()
