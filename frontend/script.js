@@ -94,9 +94,18 @@ function getPlayerId() {
 }
 
 function logout() {
+    // Limpiar localStorage
     localStorage.removeItem("auth_token");
     localStorage.removeItem("player_id");
+
+    // Limpiar variables globales
     PLAYER_ID = null;
+
+    // Limpiar caché
+    invalidateAllCache();
+
+    // Mostrar modal de login y recargar
+    document.getElementById("loginModal").classList.add("active");
     location.reload();
 }
 
