@@ -9,6 +9,39 @@ let currentPage = "dashboard";
 let harvestingCrops = new Set();
 
 // ════════════════════════════════════════════════════════════════
+// CACHE EN MEMORIA - Evita requests innecesarias
+// ════════════════════════════════════════════════════════════════
+
+const cache = {
+    player: null,
+    prices: null,
+    cropTypes: null,
+    houses: null,
+    plots: new Map() // plotId -> plot data
+};
+
+function invalidatePlayerCache() {
+    cache.player = null;
+}
+
+function invalidatePlotsCache() {
+    cache.plots.clear();
+}
+
+function invalidateFarmsCache() {
+    cache.houses = null;
+    cache.plots.clear();
+}
+
+function invalidateAllCache() {
+    cache.player = null;
+    cache.prices = null;
+    cache.cropTypes = null;
+    cache.houses = null;
+    cache.plots.clear();
+}
+
+// ════════════════════════════════════════════════════════════════
 // AUTENTICACIÓN
 // ════════════════════════════════════════════════════════════════
 
@@ -172,11 +205,24 @@ window.addEventListener("DOMContentLoaded", () => {
 // CARGAR DATOS
 // ════════════════════════════════════════════════════════════════
 
-async function loadPlayer() {
+async function loadPlayer(force = false) {
+    // Si está en caché y no forzamos reload, usar caché
+    if (cache.player && !force) {
+        const player = cache.player;
+        document.getElementById("sidebarName").textContent = player.name;
+        document.getElementById("sidebarMoney").textContent = `$${player.money.toLocaleString()}`;
+        document.getElementById("sidebarLevel").textContent = `Level ${player.level}`;
+        document.getElementById("headerMoney").textContent = player.money.toLocaleString();
+        document.getElementById("headerLevel").textContent = player.level;
+        return;
+    }
+
     const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}`);
     if (!response.ok) throw new Error("No se pudo cargar el jugador");
 
     const player = await response.json();
+    cache.player = player; // Guardar en caché
+
     document.getElementById("sidebarName").textContent = player.name;
     document.getElementById("sidebarMoney").textContent = `$${player.money.toLocaleString()}`;
     document.getElementById("sidebarLevel").textContent = `Level ${player.level}`;
@@ -184,23 +230,42 @@ async function loadPlayer() {
     document.getElementById("headerLevel").textContent = player.level;
 }
 
-async function loadPrices() {
+async function loadPrices(force = false) {
+    // Precios casi nunca cambian, cachear agresivamente
+    if (cache.prices && !force) {
+        prices = cache.prices;
+        return;
+    }
+
     const response = await fetchWithAuth(`${API_BASE}/prices`);
     if (!response.ok) throw new Error("No se pudo cargar precios");
 
     const pricesData = await response.json();
+    const pricesMap = {};
     pricesData.forEach(p => {
-        prices[p.crop_type_id] = {
+        pricesMap[p.crop_type_id] = {
             seed_price: p.seed_price,
             crop_price: p.crop_price
         };
     });
+
+    cache.prices = pricesMap;
+    prices = pricesMap;
 }
 
-async function loadCropTypes() {
+async function loadCropTypes(force = false) {
+    // Tipos de cultivo nunca cambian, cachear siempre
+    if (cache.cropTypes && !force) {
+        cropTypes = cache.cropTypes;
+        return;
+    }
+
     const response = await fetchWithAuth(`${API_BASE}/crop-types`);
     if (!response.ok) throw new Error("No se pudo cargar tipos de cultivos");
-    cropTypes = await response.json();
+
+    const types = await response.json();
+    cache.cropTypes = types;
+    cropTypes = types;
 }
 
 // Helper: Parse timestamp as UTC
@@ -211,11 +276,119 @@ function parseUTCDate(dateString) {
     return new Date(dateString);
 }
 
-async function loadFarms() {
+// Renderizar granjas desde caché (sin hacer requests)
+async function renderFarmsFromCache(houses) {
+    if (houses.length === 0) {
+        document.getElementById("farms-section").innerHTML = `
+            <div class="section">
+                <div class="section-title">🌾 My Farms</div>
+                <p style="color: var(--text-secondary);">No tienes granjas aún.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let farmsHTML = '';
+
+    for (const house of houses) {
+        // Obtener plots del caché si existe, sino hacer request
+        let plots;
+        if (cache.plots.has(house.id)) {
+            plots = cache.plots.get(house.id);
+        } else {
+            const plotsResponse = await fetchWithAuth(`${API_BASE}/house/${house.id}/plots`);
+            plots = await plotsResponse.json();
+            cache.plots.set(house.id, plots);
+        }
+
+        farmsHTML += `
+            <div class="section">
+                <div class="section-title">🌾 ${house.name}</div>
+                <div class="plots-grid">
+        `;
+
+        for (const plot of plots) {
+            // Obtener cultivo del caché si existe, sino hacer request
+            let crop;
+            if (cache.plots.has(plot.id)) {
+                crop = cache.plots.get(plot.id);
+            } else {
+                const cropResponse = await fetchWithAuth(`${API_BASE}/plot/${plot.id}/crop`);
+                const data = await cropResponse.json();
+                crop = data.crop;
+                if (crop) cache.plots.set(plot.id, crop);
+            }
+
+            if (crop) {
+                const cropType = crop.crop_types.name;
+                const readyAt = parseUTCDate(crop.ready_at);
+                const now = new Date();
+                const isReady = now >= readyAt;
+
+                if (isReady) {
+                    const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
+                    const totalValue = crop.yield_amount * cropPrice;
+
+                    farmsHTML += `
+                        <div class="plot-card ready" onclick="harvestCrop(${crop.id}, '${cropType}', ${crop.yield_amount})">
+                            <div class="plot-name">${plot.name}</div>
+                            <div class="plot-emoji">🌾</div>
+                            <div class="plot-crop-name">${cropType}</div>
+                            <div class="plot-yield">📦 ${crop.yield_amount} unidades</div>
+                            <div class="plot-value">💰 $${totalValue}</div>
+                            <div class="plot-status">✨ Ready to Harvest!</div>
+                        </div>
+                    `;
+                } else {
+                    const timeLeftMs = readyAt - now;
+                    const hours = Math.floor(timeLeftMs / 3600000);
+                    const minutes = Math.floor((timeLeftMs % 3600000) / 60000);
+                    const seconds = Math.floor((timeLeftMs % 60000) / 1000);
+                    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                    const cropPrice = prices[crop.crop_type_id]?.crop_price || 0;
+                    const totalValue = crop.yield_amount * cropPrice;
+
+                    farmsHTML += `
+                        <div class="plot-card with-crop" id="plot-${crop.id}" data-crop-id="${crop.id}" data-crop-name="${cropType}" data-yield="${crop.yield_amount}" data-price="${cropPrice}" data-total="${totalValue}">
+                            <div class="plot-name">${plot.name}</div>
+                            <div class="plot-emoji">🌱</div>
+                            <div class="plot-crop-name">${cropType}</div>
+                            <div class="plot-time countdown" id="time-${crop.id}">${timeStr}</div>
+                        </div>
+                    `;
+                }
+            } else {
+                farmsHTML += `
+                    <div class="plot-card" onclick="openPlantModal(${plot.id})">
+                        <div class="plot-name">${plot.name}</div>
+                        <div class="plot-emoji">🌱</div>
+                        <div class="plot-status">Click to plant</div>
+                    </div>
+                `;
+            }
+        }
+
+        farmsHTML += `</div></div>`;
+    }
+
+    document.getElementById("farms-section").innerHTML = farmsHTML;
+}
+
+async function loadFarms(force = false) {
+    // Si está en caché y no forzamos reload, usar caché
+    if (cache.houses && !force) {
+        const houses = cache.houses;
+        // Renderizar desde caché
+        await renderFarmsFromCache(houses);
+        return;
+    }
+
     const response = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
     if (!response.ok) throw new Error("No se pudo cargar las casas");
 
     const houses = await response.json();
+    cache.houses = houses; // Guardar en caché
 
     if (houses.length === 0) {
         document.getElementById("farms-section").innerHTML = `
@@ -593,9 +766,14 @@ async function plantCrop(cropTypeId, seedPrice) {
 
         showMessage(`✅ ¡Semilla plantada! -$${seedPrice}`, "success");
         closePlantModal();
+
+        // Invalidar caché porque el dinero y las parcelas cambiaron
+        invalidatePlayerCache();
+        invalidatePlotsCache();
+
         setTimeout(() => {
-            loadPlayer();
-            loadFarms();
+            loadPlayer(true);  // true = forzar reload desde servidor
+            loadFarms(true);
         }, 500);
 
     } catch (error) {
@@ -626,9 +804,12 @@ async function harvestCrop(cropId, cropName, yieldAmount) {
 
         showMessage(`✅ ¡Cosechado! ${actualYield} unidades guardadas en el inventario`, "success");
 
+        // Invalidar caché porque las parcelas cambiaron
+        invalidatePlotsCache();
+
         setTimeout(() => {
-            loadPlayer();
-            loadFarms();
+            loadPlayer(true);
+            loadFarms(true);
         }, 500);
 
     } catch (error) {
@@ -678,9 +859,13 @@ async function sellCrop() {
         const result = await response.json();
         showMessage(`✅ ¡Vendido! +$${result.total_revenue} 💸`, "success");
 
+        // Invalidar caché porque el dinero e inventario cambiaron
+        invalidatePlayerCache();
+        invalidatePlotsCache();
+
         try {
-            await loadPlayer();
-            await loadFarms();
+            await loadPlayer(true);
+            await loadFarms(true);
         } catch (error) {
             console.error("Error reloading after sell:", error);
         }
