@@ -852,7 +852,14 @@ async function confirmSellHouse() {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || "Error al vender");
+            let errorMsg = error.error || "Error al vender";
+
+            // Mensajes más claros para errores específicos
+            if (errorMsg.includes("active crops")) {
+                errorMsg = "❌ No puedes vender esta casa. Primero cosecha todos los cultivos plantados.";
+            }
+
+            throw new Error(errorMsg);
         }
 
         const result = await response.json();

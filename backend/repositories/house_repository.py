@@ -125,6 +125,32 @@ def sell_house(player_id: int, house_id: int):
         if house["player_id"] != player_id:
             raise ValueError("You don't own this house")
 
+        # Verificar si hay cultivos plantados en los plots de esta casa
+        plots_response = (
+            supabase
+            .table("plots")
+            .select("id")
+            .eq("house_id", house_id)
+            .execute()
+        )
+
+        if plots_response.data:
+            plot_ids = [p["id"] for p in plots_response.data]
+
+            # Buscar cultivos activos (no cosechados)
+            crops_response = (
+                supabase
+                .table("crops")
+                .select("id")
+                .in_("plot_id", plot_ids)
+                .is_("harvested_at", "null")
+                .limit(1)
+                .execute()
+            )
+
+            if crops_response.data:
+                raise ValueError("Cannot sell house with active crops. Harvest all crops first.")
+
         house_price = house["price"]
         house_name = house["name"]
 
