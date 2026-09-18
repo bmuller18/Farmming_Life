@@ -235,23 +235,71 @@ async function loadDashboard() {
                     </div>
                 </div>
 
-                <div style="margin-top: 30px; padding: 20px; background: var(--bg-secondary); border-radius: 8px;">
-                    <h3 style="margin-top: 0; color: var(--green-dark);">Resumen</h3>
-                    <ul style="list-style: none; padding: 0; color: var(--text-secondary);">
-                        <li style="padding: 8px 0;">👤 Jugador: <strong>${player.name}</strong></li>
-                        <li style="padding: 8px 0;">📊 Balance: <strong>$${player.money.toLocaleString()}</strong></li>
-                        <li style="padding: 8px 0;">🏡 Propiedades: <strong>${houses.length}</strong></li>
-                        <li style="padding: 8px 0;">🌾 Cultivos: <strong>${inventory.length}</strong></li>
-                    </ul>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <!-- Leaderboard -->
+                    <div style="padding: 20px; background: var(--bg-secondary); border-radius: 8px;">
+                        <h3 style="margin-top: 0; color: var(--green-dark);">🏆 Top Jugadores</h3>
+                        <div style="max-height: 250px; overflow-y: auto; color: var(--text-secondary);">
+                            <p>Próximamente...</p>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div style="padding: 20px; background: var(--bg-secondary); border-radius: 8px;">
+                        <h3 style="margin-top: 0; color: var(--green-dark);">📝 Actividad Reciente</h3>
+                        <div style="max-height: 250px; overflow-y: auto; color: var(--text-secondary);" id="activityLog">
+                            <p>Sin actividad aún</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
 
         document.getElementById("farms-section").innerHTML = html;
+        // Renderizar activity log
+        const activityLog = getActivityLog();
+        const logHtml = activityLog.length > 0 ? activityLog.map(log => `
+            <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-size: 0.9em;">
+                <div>${log.emoji} ${log.text}</div>
+                <div style="font-size: 0.8em; opacity: 0.7;">${log.time}</div>
+            </div>
+        `).join('') : '<p>Sin actividad aún</p>';
+
+        const logElement = document.getElementById("activityLog");
+        if (logElement) {
+            logElement.innerHTML = logHtml;
+        }
     } catch (error) {
         console.error("Error loading dashboard:", error);
         showMessage("❌ Error: " + error.message, "error");
     }
+}
+
+function logActivity(emoji, text) {
+    const log = localStorage.getItem("activityLog");
+    const activities = log ? JSON.parse(log) : [];
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+    activities.unshift({
+        emoji: emoji,
+        text: text,
+        time: timeStr,
+        timestamp: now.getTime()
+    });
+
+    // Guardar solo últimas 50 actividades
+    if (activities.length > 50) {
+        activities.pop();
+    }
+
+    localStorage.setItem("activityLog", JSON.stringify(activities));
+}
+
+function getActivityLog() {
+    const log = localStorage.getItem("activityLog");
+    return log ? JSON.parse(log) : [];
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -737,6 +785,9 @@ async function buyHouse(houseId, houseName) {
         const result = await response.json();
         showMessage(`✅ ¡${houseName} comprada! Tu nuevo balance: $${result.new_balance.toLocaleString()}`, "success");
 
+        // Registrar actividad
+        logActivity(`🏡`, `Compró ${houseName}`);
+
         invalidatePlayerCache();
         invalidateFarmsCache();
         invalidatePropertiesCache();
@@ -800,6 +851,9 @@ async function confirmSellHouse() {
 
         const result = await response.json();
         showMessage(`✅ ¡${houseName} vendida! Recibiste $${result.refund_amount.toLocaleString()}. Nuevo balance: $${result.new_balance.toLocaleString()}`, "success");
+
+        // Registrar actividad
+        logActivity(`💰`, `Vendió ${houseName} por $${result.refund_amount.toLocaleString()}`);
 
         invalidatePlayerCache();
         invalidateFarmsCache();
