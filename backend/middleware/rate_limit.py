@@ -8,9 +8,15 @@ from flask import request
 
 def create_limiter(app):
 	"""Crea y configura Flask-Limiter"""
+	def rate_limit_key():
+		# No aplicar rate limiting a preflight requests (OPTIONS)
+		if request.method == "OPTIONS":
+			return None
+		return get_remote_address()
+
 	limiter = Limiter(
 		app=app,
-		key_func=get_remote_address,
+		key_func=rate_limit_key,
 		default_limits=["200 per day", "50 per hour"],
 		storage_uri="memory://"  # En producción usar Redis
 	)
