@@ -556,24 +556,33 @@ async function loadInventory() {
 
 async function loadProperties(force = false) {
     try {
+        console.log("[loadProperties] force=", force);
         // Usar caché si está disponible y no forzamos reload
         if (cache.properties && !force) {
+            console.log("[loadProperties] Usando caché");
             renderProperties(cache.properties);
             return;
         }
 
+        console.log("[loadProperties] Cargando desde API");
         // Load player's houses
         const playerHousesRes = await fetchWithAuth(`${API_BASE}/player/${PLAYER_ID}/houses`);
+        if (!playerHousesRes.ok) throw new Error("Error cargando casas propias");
         const playerHouses = await playerHousesRes.json();
+        console.log("[loadProperties] Player houses:", playerHouses.length);
 
         // Load available houses for purchase
         const availableRes = await fetchWithAuth(`${API_BASE}/houses/available/${PLAYER_ID}`);
+        if (!availableRes.ok) throw new Error("Error cargando casas disponibles");
         const availableHouses = await availableRes.json();
+        console.log("[loadProperties] Available houses:", availableHouses.length);
 
         // Guardar en caché
         cache.properties = { playerHouses, availableHouses };
+        console.log("[loadProperties] Renderizando");
 
         renderProperties(cache.properties);
+        console.log("[loadProperties] Completado");
 
     } catch (error) {
         console.error("Error loading properties:", error);
