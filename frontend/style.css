@@ -215,8 +215,8 @@ body {
     margin-bottom: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 .btn-sell {
@@ -229,7 +229,8 @@ body {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s ease;
-    margin-left: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-sell:hover {
