@@ -672,9 +672,10 @@ async function buyHouse(houseId, houseName) {
 
         invalidatePlayerCache();
         invalidateFarmsCache();
+        invalidatePropertiesCache();
         await loadPlayer(true);
         await loadFarms(true);
-        await loadProperties();
+        await loadProperties(true);
     } catch (error) {
         showMessage("❌ " + error.message, "error");
     }
