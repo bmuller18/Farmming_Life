@@ -360,7 +360,8 @@ def get_inventory(player_id):
             for crop in harvested_crops:
                 crop_type_id = crop.get('crop_type_id')
                 crop_type_name = crop.get('crop_types', {}).get('name', 'Unknown')
-                yield_amount = crop.get('yield_amount', 0)
+                # Usar total_yield que es lo que devuelve get_harvested_crops_by_player
+                yield_amount = crop.get('total_yield', crop.get('yield_amount', 0))
 
                 if crop_type_id not in crops_by_type:
                     crops_by_type[crop_type_id] = {
